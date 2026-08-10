@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161511556938",
+    "project_id": "civilink-7276b",
+    "storage_bucket": "civilink-7276b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161511556938:android:bfacea0cf0e27c2263a3b3",
+        "android_client_info": {
+          "package_name": "com.example.civilink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2Dx9l6EfBF_4CjloneLTQBKGTpnHYLUU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
