@@ -1,6 +1,5 @@
 package com.example.civilink.ui.screens.splash
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -11,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -27,12 +27,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_ONBOARDING1
+import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -48,20 +50,24 @@ import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicWhite
 import kotlinx.coroutines.delay
 
-// CiviLink Color Scheme is now in ui.theme.Color.kt
-
 @Composable
 fun SplashScreen(navController: NavController) {
 
-    LaunchedEffect(key1 = true) {
+    // Navigate from Splash → Onboarding 1
+    LaunchedEffect(Unit) {
+
         delay(3000L)
+
         navController.navigate(ROUT_ONBOARDING1) {
-            popUpTo(navController.graph.startDestinationId) {
+
+            // Remove Splash from the back stack
+            popUpTo(ROUT_SPLASH) {
                 inclusive = true
             }
         }
     }
 
+    // Logo animation
     val infiniteTransition = rememberInfiniteTransition(
         label = "Splash Animation"
     )
@@ -148,7 +154,9 @@ fun SplashScreen(navController: NavController) {
                 Box(
                     modifier = Modifier
                         .size(105.dp)
-                        .clip(RoundedCornerShape(30.dp))
+                        .clip(
+                            RoundedCornerShape(30.dp)
+                        )
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
@@ -249,6 +257,7 @@ fun SplashScreen(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun SplashScreenPreview() {
+
     SplashScreen(
         navController = rememberNavController()
     )

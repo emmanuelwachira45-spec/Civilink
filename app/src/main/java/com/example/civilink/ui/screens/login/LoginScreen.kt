@@ -1,4 +1,4 @@
-package com.example.civilink.ui.Screens.Login
+package com.example.civilink.ui.screens.login
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -15,12 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,13 +41,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_HOMESCREEN
@@ -60,13 +63,14 @@ import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
 
-// CiviLink Color Scheme is now in ui.theme.Color.kt
-
 @Composable
 fun LoginScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
+    val isPreview = LocalInspectionMode.current
+    val auth = remember(isPreview) {
+        if (isPreview) null else FirebaseAuth.getInstance()
+    }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -106,7 +110,7 @@ fun LoginScreen(navController: NavController) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Public,
-                    contentDescription = "CiviLink",
+                    contentDescription = "CiviLink Logo",
                     modifier = Modifier.size(45.dp),
                     tint = CivicBlue
                 )
@@ -116,6 +120,7 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier.height(20.dp)
             )
 
+            // Welcome
             Text(
                 text = "Welcome back",
                 color = CivicWhite,
@@ -182,6 +187,9 @@ fun LoginScreen(navController: NavController) {
                                 contentDescription = null
                             )
                         },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = CivicBlue,
@@ -236,6 +244,9 @@ fun LoginScreen(navController: NavController) {
                         } else {
                             PasswordVisualTransformation()
                         },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password
+                        ),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = CivicBlue,
@@ -248,12 +259,19 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(10.dp)
                     )
 
-                    // Forgot password
+                    // Forgot Password
                     Text(
                         text = "Forgot password?",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 4.dp)
+                            .clickable {
+                                Toast.makeText(
+                                    context,
+                                    "Password reset will be available soon.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
                         color = CivicBlue,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -264,31 +282,59 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(20.dp)
                     )
 
-                    // Login button
+                    // Login Button
                     Button(
                         onClick = {
-                            if (email.isEmpty() || password.isEmpty()) {
-                                Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
+
+                            if (email.isBlank() || password.isBlank()) {
+
+                                Toast.makeText(
+                                    context,
+                                    "Please enter email and password",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
                             } else {
+
                                 isLoading = true
-                                auth.signInWithEmailAndPassword(email, password)
-                                    .addOnCompleteListener { task ->
-                                        isLoading = false
-                                        if (task.isSuccessful) {
-                                            Toast.makeText(context, "Welcome back!", Toast.LENGTH_SHORT).show()
-                                            navController.navigate(ROUT_HOMESCREEN) {
-                                                popUpTo(ROUT_LOGINSCREEN) {
-                                                    this.inclusive = true
-                                                }
+
+                                auth?.signInWithEmailAndPassword(
+                                    email.trim(),
+                                    password
+                                )?.addOnCompleteListener { task ->
+
+                                    isLoading = false
+
+                                    if (task.isSuccessful) {
+
+                                        Toast.makeText(
+                                            context,
+                                            "Welcome back!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        navController.navigate(
+                                            ROUT_HOMESCREEN
+                                        ) {
+
+                                            popUpTo(
+                                                ROUT_LOGINSCREEN
+                                            ) {
+                                                inclusive = true
                                             }
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Login failed: ${task.exception?.message}",
-                                                Toast.LENGTH_LONG
-                                            ).show()
+
+                                            launchSingleTop = true
                                         }
+
+                                    } else {
+
+                                        Toast.makeText(
+                                            context,
+                                            "Login failed: ${task.exception?.message}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
+                                }
                             }
                         },
                         modifier = Modifier
@@ -300,13 +346,17 @@ fun LoginScreen(navController: NavController) {
                             containerColor = CivicBlue
                         )
                     ) {
+
                         if (isLoading) {
+
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = CivicWhite,
                                 strokeWidth = 2.dp
                             )
+
                         } else {
+
                             Text(
                                 text = "Login",
                                 fontSize = 16.sp,
@@ -366,8 +416,8 @@ fun LoginScreen(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
+
     LoginScreen(
         navController = rememberNavController()
     )
 }
-
