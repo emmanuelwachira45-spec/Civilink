@@ -32,29 +32,36 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+
+import com.example.civilink.data.Report
+import com.example.civilink.data.ReportViewModel
 import com.example.civilink.navigation.ROUT_CREATEREPORT
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -63,9 +70,50 @@ import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
+import com.google.firebase.auth.FirebaseAuth
+
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    reportViewModel: ReportViewModel = viewModel()
+) {
+    val isPreview = LocalInspectionMode.current
+
+    val auth = remember(isPreview) {
+        if (isPreview) null else FirebaseAuth.getInstance()
+    }
+
+    val currentUser = auth?.currentUser
+
+    // Get reports from ViewModel
+    val reports by reportViewModel.reports.collectAsState()
+    val isLoading by reportViewModel.isLoading.collectAsState()
+    val error by reportViewModel.error.collectAsState()
+
+    HomeScreenContent(
+        navController = navController,
+        reports = reports,
+        isLoading = isLoading,
+        error = error,
+        currentUserUid = currentUser?.uid,
+        onLoadReports = { 
+            if (!isPreview) {
+                reportViewModel.loadReports()
+            }
+        }
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    navController: NavController,
+    reports: List<Report>,
+    isLoading: Boolean,
+    error: String?,
+    currentUserUid: String?,
+    onLoadReports: () -> Unit = {}
+) {
 
     var searchText by remember {
         mutableStateOf("")
@@ -77,6 +125,39 @@ fun HomeScreen(navController: NavController) {
         "Garbage" to Icons.Default.Delete,
         "Electricity" to Icons.Default.ElectricBolt,
     )
+
+    // Load reports
+    LaunchedEffect(Unit) {
+        onLoadReports()
+    }
+
+    // Filter reports for current user
+    val myReports = reports.filter {
+        it.userId == currentUserUid
+    }
+
+    // Report statistics
+    val pendingCount = myReports.count {
+        it.status.equals("Pending", ignoreCase = true)
+    }
+
+    val progressCount = myReports.count {
+        it.status.equals("In Progress", ignoreCase = true)
+    }
+
+    val resolvedCount = myReports.count {
+        it.status.equals("Resolved", ignoreCase = true)
+    }
+
+    // Search filtering
+    val filteredReports = myReports.filter { report ->
+
+        searchText.isBlank() ||
+                report.title.contains(searchText, ignoreCase = true) ||
+                report.category.contains(searchText, ignoreCase = true) ||
+                report.location.contains(searchText, ignoreCase = true)
+    }
+
 
     Column(
         modifier = Modifier
@@ -142,11 +223,13 @@ fun HomeScreen(navController: NavController) {
                             }
                         }
                     ) {
+
                         IconButton(
                             onClick = {
                                 // Notifications
                             }
                         ) {
+
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = "Notifications",
@@ -190,6 +273,7 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
+
         // ─────────────────────────────
         // Main Content
         // ─────────────────────────────
@@ -206,7 +290,10 @@ fun HomeScreen(navController: NavController) {
                 )
         ) {
 
+            // ─────────────────────────────
             // Report Issue Card
+            // ─────────────────────────────
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
@@ -286,11 +373,16 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(24.dp)
             )
 
+
+            // ─────────────────────────────
             // Categories
+            // ─────────────────────────────
+
             Text(
                 text = "Report by category",
                 color = CivicText,
@@ -315,11 +407,16 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(25.dp)
             )
 
+
+            // ─────────────────────────────
             // Report Summary
+            // ─────────────────────────────
+
             Text(
                 text = "My reports",
                 color = CivicText,
@@ -337,29 +434,34 @@ fun HomeScreen(navController: NavController) {
             ) {
 
                 ReportStatusCard(
-                    number = "4",
+                    number = pendingCount.toString(),
                     label = "Pending",
                     modifier = Modifier.weight(1f)
                 )
 
                 ReportStatusCard(
-                    number = "2",
+                    number = progressCount.toString(),
                     label = "In Progress",
                     modifier = Modifier.weight(1f)
                 )
 
                 ReportStatusCard(
-                    number = "8",
+                    number = resolvedCount.toString(),
                     label = "Resolved",
                     modifier = Modifier.weight(1f)
                 )
             }
 
+
             Spacer(
                 modifier = Modifier.height(25.dp)
             )
 
+
+            // ─────────────────────────────
             // Recent Reports
+            // ─────────────────────────────
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -385,27 +487,67 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.height(12.dp)
             )
 
-            RecentReportCard(
-                title = "Large pothole reported",
-                category = "Roads",
-                status = "In Progress"
-            )
 
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
+            // Loading state
+            if (isLoading) {
 
-            RecentReportCard(
-                title = "Broken street light",
-                category = "Electricity",
-                status = "Pending"
-            )
+                Text(
+                    text = "Loading reports...",
+                    color = CivicGray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(vertical = 15.dp)
+                )
+            }
+
+
+            // Error state
+            if (error != null) {
+
+                Text(
+                    text = "Error: $error",
+                    color = CivicGray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(vertical = 15.dp)
+                )
+            }
+
+
+            // No reports
+            if (!isLoading && error == null && filteredReports.isEmpty()) {
+
+                Text(
+                    text = "You haven't submitted any reports yet.",
+                    color = CivicGray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(vertical = 15.dp)
+                )
+            }
+
+
+            // Display reports
+            filteredReports.forEach { report ->
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+
+                RecentReportCard(
+                    title = report.title,
+                    category = report.category,
+                    status = report.status
+                )
+            }
+
 
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
 
-            // Community message
+
+            // ─────────────────────────────
+            // Community Message
+            // ─────────────────────────────
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -452,13 +594,11 @@ fun HomeScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(80.dp)
             )
         }
-
-        // Bottom navigation can be added here
-        // when AppNavigation.kt is connected.
     }
 }
 
@@ -648,11 +788,21 @@ fun RecentReportCard(
 }
 
 
+// ─────────────────────────────────────────────
+// Preview
+// ─────────────────────────────────────────────
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-
-    HomeScreen(
-        navController = rememberNavController()
+    HomeScreenContent(
+        navController = rememberNavController(),
+        reports = listOf(
+            Report(id = "1", title = "Pothole", category = "Roads", status = "Pending", userId = "test_user"),
+            Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user")
+        ),
+        isLoading = false,
+        error = null,
+        currentUserUid = "test_user"
     )
 }
