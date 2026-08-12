@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.navigation.ROUT_ADMINDASHBOARD
 import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import com.example.civilink.navigation.ROUT_REGISTER
@@ -182,10 +183,18 @@ fun RegisterScreen(navController: NavController) {
                         },
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(11.dp))
@@ -208,10 +217,18 @@ fun RegisterScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(11.dp))
@@ -234,10 +251,18 @@ fun RegisterScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(11.dp))
@@ -281,10 +306,18 @@ fun RegisterScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(11.dp))
@@ -329,10 +362,18 @@ fun RegisterScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(modifier = Modifier.height(17.dp))
@@ -415,11 +456,16 @@ fun RegisterScreen(navController: NavController) {
 
                                             if (userId != null) {
 
+                                                // Determine role based on email
+                                                val role =
+                                                    if (cleanEmail == "admin@civilink.com") "admin" else "user"
+
                                                 // User information to save
                                                 val userData = mapOf(
                                                     "fullName" to cleanName,
                                                     "email" to cleanEmail,
                                                     "phone" to cleanPhone,
+                                                    "role" to role,
                                                     "createdAt" to System.currentTimeMillis()
                                                 )
 
@@ -441,8 +487,12 @@ fun RegisterScreen(navController: NavController) {
                                                                 Toast.LENGTH_SHORT
                                                             ).show()
 
+                                                            // Navigate based on role
+                                                            val destination =
+                                                                if (role == "admin") ROUT_ADMINDASHBOARD else ROUT_HOMESCREEN
+
                                                             navController.navigate(
-                                                                ROUT_HOMESCREEN
+                                                                destination
                                                             ) {
 
                                                                 popUpTo(

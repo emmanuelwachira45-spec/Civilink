@@ -75,10 +75,6 @@ fun LoginScreen(navController: NavController) {
         if (isPreview) null else FirebaseAuth.getInstance()
     }
 
-    val database = remember(isPreview) {
-        if (isPreview) null else FirebaseDatabase.getInstance()
-    }
-
     var email by remember {
         mutableStateOf("")
     }
@@ -103,7 +99,7 @@ fun LoginScreen(navController: NavController) {
                 Brush.verticalGradient(
                     colors = listOf(
                         CivicNavy,
-                        CivicBlue
+                        CivicBlue,
                     )
                 )
             )
@@ -198,10 +194,16 @@ fun LoginScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(
@@ -262,10 +264,18 @@ fun LoginScreen(navController: NavController) {
                         ),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = CivicText,
+                            unfocusedTextColor = CivicText,
                             focusedBorderColor = CivicBlue,
+                            unfocusedBorderColor = CivicGray.copy(alpha = 0.5f),
                             focusedLabelColor = CivicBlue,
-                            cursorColor = CivicBlue
-                        )
+                            unfocusedLabelColor = CivicGray,
+                            focusedLeadingIconColor = CivicBlue,
+                            unfocusedLeadingIconColor = CivicBlue,
+                            focusedTrailingIconColor = CivicBlue,
+                            unfocusedTrailingIconColor = CivicBlue,
+                            cursorColor = CivicBlue,
+                        ),
                     )
 
                     Spacer(
@@ -327,119 +337,56 @@ fun LoginScreen(navController: NavController) {
                                 password
                             )?.addOnCompleteListener { task ->
 
-                                if (!task.isSuccessful) {
+                                if (task.isSuccessful) {
 
+                                    val user = FirebaseAuth.getInstance().currentUser
+
+                                    if (user != null) {
+
+                                        val uid = user.uid
+
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("admins")
+                                            .child(uid)
+                                            .get()
+                                            .addOnSuccessListener { snapshot ->
+                                                isLoading = false
+                                                if (snapshot.exists()) {
+
+                                                    // User is an admin
+                                                    navController.navigate(ROUT_ADMINDASHBOARD) {
+                                                        popUpTo(ROUT_LOGINSCREEN) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+
+                                                } else {
+
+                                                    // Normal user
+                                                    navController.navigate(ROUT_HOMESCREEN) {
+                                                        popUpTo(ROUT_LOGINSCREEN) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            .addOnFailureListener {
+                                                isLoading = false
+                                                Toast.makeText(
+                                                    context,
+                                                    "Could not verify account",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                    }
+                                } else {
                                     isLoading = false
-
                                     Toast.makeText(
                                         context,
                                         "Login failed: ${task.exception?.message}",
                                         Toast.LENGTH_LONG
                                     ).show()
-
-                                    return@addOnCompleteListener
                                 }
-
-
-                                // Login successful
-
-                                val user = auth.currentUser
-
-                                if (user == null) {
-
-                                    isLoading = false
-
-                                    Toast.makeText(
-                                        context,
-                                        "Unable to get user information",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
-                                    return@addOnCompleteListener
-                                }
-
-
-                                val uid = user.uid
-
-
-                                // Read user's role from Firebase
-
-                                database
-                                    ?.getReference("users")
-                                    ?.child(uid)
-                                    ?.child("role")
-                                    ?.get()
-                                    ?.addOnSuccessListener { snapshot ->
-
-                                        isLoading = false
-
-                                        val role =
-                                            snapshot.getValue(String::class.java)
-                                                ?: "user"
-
-
-                                        if (
-                                            role.equals(
-                                                "admin",
-                                                ignoreCase = true
-                                            )
-                                        ) {
-
-                                            // ADMIN
-
-                                            Toast.makeText(
-                                                context,
-                                                "Welcome, Admin!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-
-                                            navController.navigate(
-                                                ROUT_ADMINDASHBOARD
-                                            ) {
-
-                                                popUpTo(
-                                                    ROUT_LOGINSCREEN
-                                                ) {
-                                                    inclusive = true
-                                                }
-
-                                                launchSingleTop = true
-                                            }
-
-                                        } else {
-
-                                            // NORMAL USER
-
-                                            Toast.makeText(
-                                                context,
-                                                "Welcome back!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-
-                                            navController.navigate(
-                                                ROUT_HOMESCREEN
-                                            ) {
-
-                                                popUpTo(
-                                                    ROUT_LOGINSCREEN
-                                                ) {
-                                                    inclusive = true
-                                                }
-
-                                                launchSingleTop = true
-                                            }
-                                        }
-                                    }
-                                    ?.addOnFailureListener { exception ->
-
-                                        isLoading = false
-
-                                        Toast.makeText(
-                                            context,
-                                            "Could not check account role: ${exception.message}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
                             }
 
                         },

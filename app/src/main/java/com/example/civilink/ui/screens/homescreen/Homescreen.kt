@@ -72,6 +72,7 @@ import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 
 @Composable
