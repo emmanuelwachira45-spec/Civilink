@@ -22,7 +22,9 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +59,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import com.example.civilink.navigation.ROUT_REGISTER
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicNavy
@@ -90,9 +93,9 @@ fun RegisterScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(value = false) }
+    var confirmPasswordVisible by remember { mutableStateOf(value = false) }
+    var isLoading by remember { mutableStateOf(value = false) }
 
     Box(
         modifier = Modifier
@@ -116,22 +119,9 @@ fun RegisterScreen(navController: NavController) {
         ) {
 
             // CiviLink Logo
-            Box(
-                modifier = Modifier
-                    .size(68.dp)
-                    .background(
-                        CivicWhite,
-                        RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Public,
-                    contentDescription = "CiviLink",
-                    modifier = Modifier.size(38.dp),
-                    tint = CivicBlue
-                )
-            }
+            AppLogo(
+                size = 68.dp
+            )
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -395,12 +385,12 @@ fun RegisterScreen(navController: NavController) {
                                     ).show()
                                 }
 
-                                auth == null || database == null -> {
+                                (auth == null || database == null) -> {
 
                                     Toast.makeText(
                                         context,
                                         "Firebase is not available",
-                                        Toast.LENGTH_SHORT
+                                        Toast.LENGTH_SHORT,
                                     ).show()
                                 }
 
@@ -568,6 +558,6 @@ fun RegisterScreen(navController: NavController) {
 fun RegisterScreenPreview() {
 
     RegisterScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
     )
 }

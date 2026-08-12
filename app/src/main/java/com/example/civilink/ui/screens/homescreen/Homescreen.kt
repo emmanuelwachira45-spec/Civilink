@@ -63,6 +63,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
 import com.example.civilink.navigation.ROUT_CREATEREPORT
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -76,7 +77,7 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun HomeScreen(
     navController: NavController,
-    reportViewModel: ReportViewModel = viewModel()
+    reportViewModel: ReportViewModel = viewModel(),
 ) {
     val isPreview = LocalInspectionMode.current
 
@@ -97,12 +98,11 @@ fun HomeScreen(
         isLoading = isLoading,
         error = error,
         currentUserUid = currentUser?.uid,
-        onLoadReports = { 
-            if (!isPreview) {
-                reportViewModel.loadReports()
-            }
+    ) {
+        if (!isPreview) {
+            reportViewModel.loadReports()
         }
-    )
+    }
 }
 
 @Composable
@@ -208,12 +208,16 @@ fun HomeScreenContent(
                             modifier = Modifier.height(3.dp)
                         )
 
-                        Text(
-                            text = "Welcome to CiviLink",
-                            color = CivicWhite,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AppLogo(size = 36.dp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "CiviLink",
+                                color = CivicWhite,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     BadgedBox(
@@ -502,24 +506,22 @@ fun HomeScreenContent(
 
             // Error state
             if (error != null) {
-
                 Text(
                     text = "Error: $error",
                     color = CivicGray,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 15.dp)
+                    modifier = Modifier.padding(vertical = 15.dp),
                 )
             }
 
 
             // No reports
             if (!isLoading && error == null && filteredReports.isEmpty()) {
-
                 Text(
                     text = "You haven't submitted any reports yet.",
                     color = CivicGray,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 15.dp)
+                    modifier = Modifier.padding(vertical = 15.dp),
                 )
             }
 
@@ -528,13 +530,13 @@ fun HomeScreenContent(
             filteredReports.forEach { report ->
 
                 Spacer(
-                    modifier = Modifier.height(10.dp)
+                    modifier = Modifier.height(10.dp),
                 )
 
                 RecentReportCard(
                     title = report.title,
                     category = report.category,
-                    status = report.status
+                    status = report.status,
                 )
             }
 

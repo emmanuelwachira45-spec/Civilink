@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_ONBOARDING2
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicWhite
@@ -37,6 +38,9 @@ fun Onboarding1Screen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        AppLogo(size = 100.dp)
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Welcome to CiviLink",

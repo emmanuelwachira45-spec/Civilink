@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -96,8 +97,11 @@ fun ReportDetailScreen(navController: NavController) {
                 text = "Report Details",
                 color = CivicWhite,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+
+            AppLogo(size = 32.dp)
         }
 
         // ─────────────────────────────

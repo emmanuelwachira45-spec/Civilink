@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicWhite
@@ -37,6 +38,10 @@ fun Onboarding2Screen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
+        AppLogo(size = 90.dp)
+
+        Spacer(modifier = Modifier.height(28.dp))
 
         Text(
             text = "Make Your Community Better",

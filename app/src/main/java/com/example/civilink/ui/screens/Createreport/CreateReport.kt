@@ -1,8 +1,7 @@
-package com.example.civilink.ui.screens.Createreport
+package com.example.civilink.ui.screens.createreport
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_HOMESCREEN
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -80,15 +80,15 @@ fun CreateReportScreen(navController: NavController) {
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("General") }
-    var isExpanded by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(value = false) }
+    var isLoading by remember { mutableStateOf(value = false) }
 
     val categories = listOf(
         "Water Issue" to Icons.Default.WaterDrop,
         "Electricity" to Icons.Default.ElectricBolt,
         "Road Damage" to Icons.Default.Build,
         "Waste/Trash" to Icons.Default.Delete,
-        "General" to Icons.Default.Report
+        "General" to Icons.Default.Report,
     )
 
     Box(
@@ -126,8 +126,11 @@ fun CreateReportScreen(navController: NavController) {
                     text = "Submit Report",
                     color = CivicWhite,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
+
+                AppLogo(size = 32.dp)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -251,7 +254,7 @@ fun CreateReportScreen(navController: NavController) {
                                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                             } else {
                                 val userId = auth?.currentUser?.uid
-                                if (userId == null && !isPreview) {
+                                if ((userId == null && !isPreview)) {
                                     Toast.makeText(context, "You must be logged in", Toast.LENGTH_SHORT).show()
                                 } else if (database != null) {
                                     isLoading = true

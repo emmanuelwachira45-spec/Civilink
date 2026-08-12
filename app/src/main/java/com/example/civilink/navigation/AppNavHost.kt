@@ -6,7 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.civilink.ui.screens.Createreport.CreateReportScreen
+import com.example.civilink.ui.screens.createreport.CreateReportScreen
+import com.example.civilink.ui.screens.admindashboard.AdminDashboardScreen
 import com.example.civilink.ui.screens.homescreen.HomeScreen
 import com.example.civilink.ui.screens.login.LoginScreen
 import com.example.civilink.ui.screens.onboarding.Onboarding1Screen
@@ -76,6 +77,9 @@ fun AppNavHost(
         }
         composable(ROUT_CREATEREPORT) {
             CreateReportScreen(navController)
+        }
+        composable(ROUT_ADMINDASHBOARD) {
+            AdminDashboardScreen(navController)
         }
     }
 }

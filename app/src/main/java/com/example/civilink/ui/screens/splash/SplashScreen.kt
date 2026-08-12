@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Public
@@ -27,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +41,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_ONBOARDING1
 import com.example.civilink.navigation.ROUT_SPLASH
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -56,7 +55,7 @@ fun SplashScreen(navController: NavController) {
     // Navigate from Splash → Onboarding 1
     LaunchedEffect(Unit) {
 
-        delay(3000L)
+        delay(3000)
 
         navController.navigate(ROUT_ONBOARDING1) {
 
@@ -151,30 +150,9 @@ fun SplashScreen(navController: NavController) {
                         )
                 )
 
-                Box(
-                    modifier = Modifier
-                        .size(105.dp)
-                        .clip(
-                            RoundedCornerShape(30.dp)
-                        )
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    CivicWhite,
-                                    CivicLightBlue
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-
-                    Icon(
-                        imageVector = Icons.Default.Public,
-                        contentDescription = "CiviLink Logo",
-                        modifier = Modifier.size(58.dp),
-                        tint = CivicBlue
-                    )
-                }
+                AppLogo(
+                    size = 105.dp
+                )
             }
 
             Spacer(
@@ -259,6 +237,6 @@ fun SplashScreen(navController: NavController) {
 fun SplashScreenPreview() {
 
     SplashScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
     )
 }

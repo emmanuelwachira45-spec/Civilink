@@ -18,3 +18,4 @@ const val ROUT_SETTINGSCREEN = "SettingScreen"
 
 const val ROUT_HOMESCREEN = "Homescreen"
 const val ROUT_CREATEREPORT = "CreateReport"
+const val ROUT_ADMINDASHBOARD = "AdminDashboard"

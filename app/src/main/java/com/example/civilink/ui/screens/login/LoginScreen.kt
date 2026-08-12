@@ -19,7 +19,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -52,9 +51,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.navigation.ROUT_ADMINDASHBOARD
 import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import com.example.civilink.navigation.ROUT_REGISTER
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicNavy
@@ -62,20 +63,38 @@ import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun LoginScreen(navController: NavController) {
 
     val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
+
     val auth = remember(isPreview) {
         if (isPreview) null else FirebaseAuth.getInstance()
     }
 
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    val database = remember(isPreview) {
+        if (isPreview) null else FirebaseDatabase.getInstance()
+    }
+
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var password by remember {
+        mutableStateOf("")
+    }
+
+    var passwordVisible by remember {
+        mutableStateOf(value = false)
+    }
+
+    var isLoading by remember {
+        mutableStateOf(value = false)
+    }
+
 
     Box(
         modifier = Modifier
@@ -98,29 +117,14 @@ fun LoginScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center
         ) {
 
-            // CiviLink Logo
-            Box(
-                modifier = Modifier
-                    .size(82.dp)
-                    .background(
-                        color = CivicWhite,
-                        shape = RoundedCornerShape(24.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Public,
-                    contentDescription = "CiviLink Logo",
-                    modifier = Modifier.size(45.dp),
-                    tint = CivicBlue
-                )
-            }
+            AppLogo(
+                size = 82.dp
+            )
 
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
 
-            // Welcome
             Text(
                 text = "Welcome back",
                 color = CivicWhite,
@@ -143,7 +147,7 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier.height(30.dp)
             )
 
-            // Login Card
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
@@ -170,7 +174,9 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(20.dp)
                     )
 
+
                     // Email
+
                     OutlinedTextField(
                         value = email,
                         onValueChange = {
@@ -202,7 +208,9 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(16.dp)
                     )
 
+
                     // Password
+
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -220,30 +228,35 @@ fun LoginScreen(navController: NavController) {
                             )
                         },
                         trailingIcon = {
+
                             IconButton(
                                 onClick = {
                                     passwordVisible = !passwordVisible
                                 }
                             ) {
+
                                 Icon(
-                                    imageVector = if (passwordVisible) {
-                                        Icons.Default.VisibilityOff
-                                    } else {
-                                        Icons.Default.Visibility
-                                    },
-                                    contentDescription = if (passwordVisible) {
-                                        "Hide password"
-                                    } else {
-                                        "Show password"
-                                    }
+                                    imageVector =
+                                        if (passwordVisible) {
+                                            Icons.Default.VisibilityOff
+                                        } else {
+                                            Icons.Default.Visibility
+                                        },
+                                    contentDescription =
+                                        if (passwordVisible) {
+                                            "Hide password"
+                                        } else {
+                                            "Show password"
+                                        }
                                 )
                             }
                         },
-                        visualTransformation = if (passwordVisible) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
+                        visualTransformation =
+                            if (passwordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password
                         ),
@@ -259,17 +272,20 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(10.dp)
                     )
 
+
                     // Forgot Password
+
                     Text(
                         text = "Forgot password?",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .clickable {
+
                                 Toast.makeText(
                                     context,
                                     "Password reset will be available soon.",
-                                    Toast.LENGTH_SHORT
+                                    Toast.LENGTH_SHORT,
                                 ).show()
                             },
                         color = CivicBlue,
@@ -282,11 +298,16 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier.height(20.dp)
                     )
 
-                    // Login Button
+
+                    // LOGIN
+
                     Button(
                         onClick = {
 
-                            if (email.isBlank() || password.isBlank()) {
+                            if (
+                                email.isBlank() ||
+                                password.isBlank()
+                            ) {
 
                                 Toast.makeText(
                                     context,
@@ -294,48 +315,133 @@ fun LoginScreen(navController: NavController) {
                                     Toast.LENGTH_SHORT
                                 ).show()
 
-                            } else {
+                                return@Button
+                            }
 
-                                isLoading = true
 
-                                auth?.signInWithEmailAndPassword(
-                                    email.trim(),
-                                    password
-                                )?.addOnCompleteListener { task ->
+                            isLoading = true
+
+
+                            auth?.signInWithEmailAndPassword(
+                                email.trim(),
+                                password
+                            )?.addOnCompleteListener { task ->
+
+                                if (!task.isSuccessful) {
 
                                     isLoading = false
 
-                                    if (task.isSuccessful) {
+                                    Toast.makeText(
+                                        context,
+                                        "Login failed: ${task.exception?.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
 
-                                        Toast.makeText(
-                                            context,
-                                            "Welcome back!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                    return@addOnCompleteListener
+                                }
 
-                                        navController.navigate(
-                                            ROUT_HOMESCREEN
+
+                                // Login successful
+
+                                val user = auth.currentUser
+
+                                if (user == null) {
+
+                                    isLoading = false
+
+                                    Toast.makeText(
+                                        context,
+                                        "Unable to get user information",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    return@addOnCompleteListener
+                                }
+
+
+                                val uid = user.uid
+
+
+                                // Read user's role from Firebase
+
+                                database
+                                    ?.getReference("users")
+                                    ?.child(uid)
+                                    ?.child("role")
+                                    ?.get()
+                                    ?.addOnSuccessListener { snapshot ->
+
+                                        isLoading = false
+
+                                        val role =
+                                            snapshot.getValue(String::class.java)
+                                                ?: "user"
+
+
+                                        if (
+                                            role.equals(
+                                                "admin",
+                                                ignoreCase = true
+                                            )
                                         ) {
 
-                                            popUpTo(
-                                                ROUT_LOGINSCREEN
+                                            // ADMIN
+
+                                            Toast.makeText(
+                                                context,
+                                                "Welcome, Admin!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                            navController.navigate(
+                                                ROUT_ADMINDASHBOARD
                                             ) {
-                                                inclusive = true
+
+                                                popUpTo(
+                                                    ROUT_LOGINSCREEN
+                                                ) {
+                                                    inclusive = true
+                                                }
+
+                                                launchSingleTop = true
                                             }
 
-                                            launchSingleTop = true
-                                        }
+                                        } else {
 
-                                    } else {
+                                            // NORMAL USER
+
+                                            Toast.makeText(
+                                                context,
+                                                "Welcome back!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                            navController.navigate(
+                                                ROUT_HOMESCREEN
+                                            ) {
+
+                                                popUpTo(
+                                                    ROUT_LOGINSCREEN
+                                                ) {
+                                                    inclusive = true
+                                                }
+
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    }
+                                    ?.addOnFailureListener { exception ->
+
+                                        isLoading = false
 
                                         Toast.makeText(
                                             context,
-                                            "Login failed: ${task.exception?.message}",
+                                            "Could not check account role: ${exception.message}",
                                             Toast.LENGTH_LONG
                                         ).show()
                                     }
-                                }
                             }
+
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -365,11 +471,14 @@ fun LoginScreen(navController: NavController) {
                         }
                     }
 
+
                     Spacer(
                         modifier = Modifier.height(22.dp)
                     )
 
+
                     // Register
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -389,7 +498,10 @@ fun LoginScreen(navController: NavController) {
                         Text(
                             text = "Create one",
                             modifier = Modifier.clickable {
-                                navController.navigate(ROUT_REGISTER)
+
+                                navController.navigate(
+                                    ROUT_REGISTER
+                                )
                             },
                             color = CivicTeal,
                             fontSize = 13.sp,
@@ -399,9 +511,11 @@ fun LoginScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
+
 
             Text(
                 text = "Your voice. Your community. Your impact.",
@@ -413,11 +527,12 @@ fun LoginScreen(navController: NavController) {
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
 
     LoginScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
     )
 }

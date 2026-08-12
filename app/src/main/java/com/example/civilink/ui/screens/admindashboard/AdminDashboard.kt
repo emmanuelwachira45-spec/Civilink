@@ -19,31 +19,51 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.data.Report
+import com.example.civilink.data.ReportViewModel
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -52,9 +72,71 @@ import com.example.civilink.ui.theme.CivicOrange
 import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
+import com.example.civilink.ui.theme.CivilinkTheme
+
 
 @Composable
-fun AdminDashboardScreen(navController: NavController) {
+fun AdminDashboardScreen(
+    navController: NavController,
+    reportViewModel: ReportViewModel = viewModel()
+) {
+
+    val isPreview = LocalInspectionMode.current
+
+    val reports by reportViewModel.reports.collectAsState()
+    val isLoading by reportViewModel.isLoading.collectAsState()
+    val error by reportViewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+
+        if (!isPreview) {
+            reportViewModel.loadReports()
+        }
+    }
+
+    AdminDashboardContent(
+        reports = reports,
+        isLoading = isLoading,
+        error = error,
+        onBackClick = {
+            navController.popBackStack()
+        },
+        onStatusChanged = { reportId, newStatus ->
+            reportViewModel.updateReportStatus(
+                reportId = reportId,
+                newStatus = newStatus
+            )
+        }
+    )
+}
+
+@Composable
+fun AdminDashboardContent(
+    reports: List<Report>,
+    isLoading: Boolean,
+    error: String?,
+    onBackClick: () -> Unit,
+    onStatusChanged: (String, String) -> Unit
+) {
+
+    // ─────────────────────────────────────
+    // Statistics
+    // ─────────────────────────────────────
+
+    val totalReports = reports.size
+
+    val pendingReports = reports.count {
+        it.status.equals("Pending", ignoreCase = true)
+    }
+
+    val inProgressReports = reports.count {
+        it.status.equals("In Progress", ignoreCase = true)
+    }
+
+    val resolvedReports = reports.count {
+        it.status.equals("Resolved", ignoreCase = true)
+    }
+
 
     Column(
         modifier = Modifier
@@ -80,15 +162,13 @@ fun AdminDashboardScreen(navController: NavController) {
         ) {
 
             IconButton(
-                onClick = {
-                    navController.popBackStack()
-                },
+                onClick = onBackClick
             ) {
 
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = CivicWhite,
+                    tint = CivicWhite
                 )
             }
 
@@ -96,7 +176,9 @@ fun AdminDashboardScreen(navController: NavController) {
                 modifier = Modifier.width(8.dp)
             )
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
 
                 Text(
                     text = "Admin Dashboard",
@@ -111,7 +193,10 @@ fun AdminDashboardScreen(navController: NavController) {
                     fontSize = 11.sp
                 )
             }
+
+            AppLogo(size = 36.dp)
         }
+
 
         // ─────────────────────────────
         // Dashboard Content
@@ -120,11 +205,14 @@ fun AdminDashboardScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(18.dp)
         ) {
 
             // Welcome Card
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
@@ -169,9 +257,15 @@ fun AdminDashboardScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
+
+
+            // ─────────────────────────────
+            // Overview
+            // ─────────────────────────────
 
             Text(
                 text = "Overview",
@@ -184,39 +278,44 @@ fun AdminDashboardScreen(navController: NavController) {
                 modifier = Modifier.height(10.dp)
             )
 
-            // Statistics
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
                 AdminStat(
                     icon = Icons.AutoMirrored.Filled.Assignment,
-                    number = "124",
+                    number = totalReports.toString(),
                     label = "Reports",
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
 
                 AdminStat(
                     icon = Icons.Default.Pending,
-                    number = "38",
+                    number = pendingReports.toString(),
                     label = "Pending",
                     modifier = Modifier.weight(1f)
                 )
 
                 AdminStat(
                     icon = Icons.Default.CheckCircle,
-                    number = "86",
+                    number = resolvedReports.toString(),
                     label = "Resolved",
                     modifier = Modifier.weight(1f)
                 )
             }
 
+
             Spacer(
                 modifier = Modifier.height(22.dp)
             )
 
-            // Citizens
+
+            // ─────────────────────────────
+            // In Progress
+            // ─────────────────────────────
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -241,7 +340,7 @@ fun AdminDashboardScreen(navController: NavController) {
                     ) {
 
                         Icon(
-                            imageVector = Icons.Default.People,
+                            imageVector = Icons.Default.Warning,
                             contentDescription = null,
                             tint = CivicBlue
                         )
@@ -256,7 +355,7 @@ fun AdminDashboardScreen(navController: NavController) {
                     ) {
 
                         Text(
-                            text = "Registered citizens",
+                            text = "Reports in progress",
                             color = CivicText,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -267,14 +366,14 @@ fun AdminDashboardScreen(navController: NavController) {
                         )
 
                         Text(
-                            text = "1,248 active citizens",
+                            text = "Currently being handled",
                             color = CivicGray,
                             fontSize = 11.sp
                         )
                     }
 
                     Text(
-                        text = "1,248",
+                        text = inProgressReports.toString(),
                         color = CivicBlue,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
@@ -282,9 +381,15 @@ fun AdminDashboardScreen(navController: NavController) {
                 }
             }
 
+
             Spacer(
                 modifier = Modifier.height(22.dp)
             )
+
+
+            // ─────────────────────────────
+            // Reports
+            // ─────────────────────────────
 
             Text(
                 text = "Recent reports",
@@ -297,50 +402,80 @@ fun AdminDashboardScreen(navController: NavController) {
                 modifier = Modifier.height(10.dp)
             )
 
-            // Recent Report 1
-            AdminReportCard(
-                icon = Icons.Default.Warning,
-                title = "Large pothole",
-                location = "Main Road, Kajiado",
-                status = "In Progress",
-                statusColor = CivicBlue,
-            ) {
-                // Open report
+
+            // Loading
+
+            if (isLoading) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(25.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+
+                    CircularProgressIndicator(
+                        color = CivicBlue
+                    )
+                }
             }
 
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
 
-            // Recent Report 2
-            AdminReportCard(
-                icon = Icons.Default.LocationOn,
-                title = "Broken street light",
-                location = "Kajiado Town",
-                status = "Pending",
-                statusColor = CivicOrange,
-            ) {
-                // Open report
+            // Error
+
+            if (error != null) {
+
+                Text(
+                    text = "Error: $error",
+                    color = CivicOrange,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(
+                        vertical = 10.dp
+                    )
+                )
             }
 
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
 
-            // Recent Report 3
-            AdminReportCard(
-                icon = Icons.Default.Report,
-                title = "Blocked drainage",
-                location = "Ngong Road",
-                status = "Resolved",
-                statusColor = CivicTeal,
-            ) {
-                // Open report
+            // No reports
+
+            if (!isLoading && reports.isEmpty()) {
+
+                Text(
+                    text = "No reports have been submitted yet.",
+                    color = CivicGray,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(
+                        vertical = 15.dp
+                    )
+                )
             }
+
+
+            // Real Firebase reports
+
+            reports.take(10).forEach { report ->
+
+                AdminReportCard(
+                    report = report,
+                    onStatusChanged = { newStatus ->
+                        onStatusChanged(report.id, newStatus)
+                    }
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+            }
+
 
             Spacer(
                 modifier = Modifier.height(22.dp)
             )
+
+
+            // ─────────────────────────────
+            // Quick Actions
+            // ─────────────────────────────
 
             Text(
                 text = "Quick actions",
@@ -357,38 +492,34 @@ fun AdminDashboardScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = CivicWhite,
-                ),
+                    containerColor = CivicWhite
+                )
             ) {
 
                 AdminActionItem(
                     icon = Icons.AutoMirrored.Filled.Assignment,
                     title = "Manage all reports",
-                    subtitle = "View and update citizen reports",
-                ) {
-                    // Manage reports
-                }
+                    subtitle = "View and update citizen reports"
+                )
 
                 AdminActionItem(
                     icon = Icons.Default.People,
                     title = "Manage citizens",
-                    subtitle = "View registered citizens",
-                ) {
-                    // Manage citizens
-                }
+                    subtitle = "View registered citizens"
+                )
 
                 AdminActionItem(
                     icon = Icons.Default.LocationOn,
                     title = "View report locations",
-                    subtitle = "See where issues are being reported",
-                ) {
-                    // View locations
-                }
+                    subtitle = "See where issues are being reported"
+                )
             }
+
 
             Spacer(
                 modifier = Modifier.height(25.dp)
             )
+
 
             Text(
                 text = "CiviLink Admin",
@@ -419,6 +550,7 @@ fun AdminDashboardScreen(navController: NavController) {
 }
 
 
+
 // ─────────────────────────────────────────────
 // Admin Statistic
 // ─────────────────────────────────────────────
@@ -428,7 +560,7 @@ fun AdminStat(
     icon: ImageVector,
     number: String,
     label: String,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
 
     Card(
@@ -484,13 +616,34 @@ fun AdminStat(
 
 @Composable
 fun AdminReportCard(
-    icon: ImageVector,
-    title: String,
-    location: String,
-    status: String,
-    statusColor: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit,
+    report: Report,
+    onStatusChanged: (String) -> Unit
 ) {
+
+    var menuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    val statusColor = when {
+
+        report.status.equals(
+            "Pending",
+            ignoreCase = true
+        ) -> CivicOrange
+
+        report.status.equals(
+            "In Progress",
+            ignoreCase = true
+        ) -> CivicBlue
+
+        report.status.equals(
+            "Resolved",
+            ignoreCase = true
+        ) -> CivicTeal
+
+        else -> CivicGray
+    }
+
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -500,75 +653,177 @@ fun AdminReportCard(
         )
     ) {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
 
-            Box(
-                modifier = Modifier
-                    .size(45.dp)
-                    .clip(CircleShape)
-                    .background(CivicLightBlue),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = CivicBlue,
-                    modifier = Modifier.size(21.dp)
-                )
-            }
+                Box(
+                    modifier = Modifier
+                        .size(45.dp)
+                        .clip(CircleShape)
+                        .background(CivicLightBlue),
+                    contentAlignment = Alignment.Center
+                ) {
 
-            Spacer(
-                modifier = Modifier.width(12.dp)
-            )
+                    Icon(
+                        imageVector = when {
+                            report.category.contains(
+                                "Water",
+                                ignoreCase = true
+                            ) -> Icons.Default.WaterDrop
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+                            report.category.contains(
+                                "Electricity",
+                                ignoreCase = true
+                            ) -> Icons.Default.ElectricBolt
 
-                Text(
-                    text = title,
-                    color = CivicText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                            report.category.contains(
+                                "Road",
+                                ignoreCase = true
+                            ) -> Icons.Default.Build
+
+                            report.category.contains(
+                                "Waste",
+                                ignoreCase = true
+                            ) -> Icons.Default.Delete
+
+                            else -> Icons.Default.Report
+                        },
+                        contentDescription = null,
+                        tint = CivicBlue,
+                        modifier = Modifier.size(21.dp)
+                    )
+                }
+
 
                 Spacer(
-                    modifier = Modifier.height(3.dp)
+                    modifier = Modifier.width(12.dp)
                 )
+
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    Text(
+                        text = report.title,
+                        color = CivicText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(3.dp)
+                    )
+
+                    Text(
+                        text = report.location,
+                        color = CivicGray,
+                        fontSize = 11.sp
+                    )
+                }
+
 
                 Text(
-                    text = location,
-                    color = CivicGray,
-                    fontSize = 11.sp
-                )
-
-                Spacer(
-                    modifier = Modifier.height(6.dp)
-                )
-
-                Text(
-                    text = status,
+                    text = report.status,
                     color = statusColor,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            IconButton(
-                onClick = onClick
-            ) {
 
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "View report",
-                    tint = CivicGray
-                )
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
+
+            Text(
+                text = report.description,
+                color = CivicGray,
+                fontSize = 12.sp,
+                maxLines = 2
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+
+            Box {
+
+                Button(
+                    onClick = {
+                        menuExpanded = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CivicLightBlue,
+                        contentColor = CivicBlue
+                    )
+                ) {
+
+                    Text(
+                        text = "Change Status"
+                    )
+                }
+
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = {
+                        menuExpanded = false
+                    }
+                ) {
+
+                    DropdownMenuItem(
+                        text = {
+                            Text("Pending")
+                        },
+                        onClick = {
+
+                            menuExpanded = false
+
+                            onStatusChanged(
+                                "Pending"
+                            )
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Text("In Progress")
+                        },
+                        onClick = {
+
+                            menuExpanded = false
+
+                            onStatusChanged(
+                                "In Progress"
+                            )
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Text("Resolved")
+                        },
+                        onClick = {
+
+                            menuExpanded = false
+
+                            onStatusChanged(
+                                "Resolved"
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -583,8 +838,7 @@ fun AdminReportCard(
 fun AdminActionItem(
     icon: ImageVector,
     title: String,
-    subtitle: String,
-    onClick: () -> Unit,
+    subtitle: String
 ) {
 
     Row(
@@ -639,25 +893,54 @@ fun AdminActionItem(
             )
         }
 
-        IconButton(
-            onClick = onClick
-        ) {
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "Open $title",
-                tint = CivicGray
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = CivicGray
+        )
     }
 }
 
 
+// ─────────────────────────────────────────────
+// Preview
+// ─────────────────────────────────────────────
+
 @Preview(showBackground = true)
 @Composable
 fun AdminDashboardScreenPreview() {
-
-    AdminDashboardScreen(
-        navController = rememberNavController(),
-    )
+    CivilinkTheme {
+        AdminDashboardContent(
+            reports = listOf(
+                Report(
+                    id = "1",
+                    title = "Pothole on Main St",
+                    category = "Road",
+                    location = "Main St, City Center",
+                    description = "Large pothole causing traffic delays.",
+                    status = "Pending"
+                ),
+                Report(
+                    id = "2",
+                    title = "Water Leak",
+                    category = "Water",
+                    location = "2nd Ave, North District",
+                    description = "Water main burst near the park.",
+                    status = "In Progress"
+                ),
+                Report(
+                    id = "3",
+                    title = "Street Light Out",
+                    category = "Electricity",
+                    location = "Park Rd, South Side",
+                    description = "The light at the corner is flickering.",
+                    status = "Resolved"
+                )
+            ),
+            isLoading = false,
+            error = null,
+            onBackClick = {},
+            onStatusChanged = { _, _ -> }
+        )
+    }
 }

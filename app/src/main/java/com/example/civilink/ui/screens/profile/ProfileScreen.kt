@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -99,8 +100,11 @@ fun ProfileScreen(navController: NavController) {
                 text = "My Profile",
                 color = CivicWhite,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+
+            AppLogo(size = 32.dp)
         }
 
         // Content
@@ -326,28 +330,25 @@ fun ProfileScreen(navController: NavController) {
                         icon = Icons.Default.Edit,
                         title = "Edit profile",
                         subtitle = "Update your personal information",
-                        onClick = {
-                            // Edit profile
-                        }
-                    )
+                    ) {
+                        // Edit profile
+                    }
 
                     ProfileMenuItem(
                         icon = Icons.Default.Notifications,
                         title = "Notifications",
                         subtitle = "Manage your notifications",
-                        onClick = {
-                            // Notifications
-                        }
-                    )
+                    ) {
+                        // Notifications
+                    }
 
                     ProfileMenuItem(
                         icon = Icons.Default.Settings,
                         title = "Settings",
                         subtitle = "App preferences and security",
-                        onClick = {
-                            // Settings
-                        }
-                    )
+                    ) {
+                        // Settings
+                    }
                 }
             }
 
@@ -574,6 +575,6 @@ fun ProfileMenuItem(
 fun ProfileScreenPreview() {
 
     ProfileScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
     )
 }

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -60,15 +61,15 @@ import com.example.civilink.ui.theme.CivicWhite
 fun SettingScreen(navController: NavController) {
 
     var notificationsEnabled by remember {
-        mutableStateOf(true)
+        mutableStateOf(value = true)
     }
 
     var locationEnabled by remember {
-        mutableStateOf(true)
+        mutableStateOf(value = true)
     }
 
     var darkModeEnabled by remember {
-        mutableStateOf(false)
+        mutableStateOf(value = false)
     }
 
     Column(
@@ -115,8 +116,11 @@ fun SettingScreen(navController: NavController) {
                 text = "Settings",
                 color = CivicWhite,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+
+            AppLogo(size = 32.dp)
         }
 
         // ─────────────────────────────
@@ -194,8 +198,8 @@ fun SettingScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = CivicWhite
-                )
+                    containerColor = CivicWhite,
+                ),
             ) {
 
                 SettingSwitchItem(
@@ -203,10 +207,9 @@ fun SettingScreen(navController: NavController) {
                     title = "Report updates",
                     subtitle = "Get updates when your reports change",
                     checked = notificationsEnabled,
-                    onCheckedChange = {
-                        notificationsEnabled = it
-                    }
-                )
+                ) {
+                    notificationsEnabled = it
+                }
             }
 
             Spacer(
@@ -512,6 +515,6 @@ fun SettingSwitchItem(
 fun SettingScreenPreview() {
 
     SettingScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
     )
 }
