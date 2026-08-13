@@ -75,6 +75,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
 
+
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -200,7 +201,7 @@ fun HomeScreenContent(
                     Column {
 
                         Text(
-                            text = "Good evening 👋",
+                            text = "Good evening ",
                             color = CivicWhite.copy(alpha = 0.75f),
                             fontSize = 14.sp
                         )
