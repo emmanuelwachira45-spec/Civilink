@@ -199,7 +199,7 @@ fun HomeScreenContent(
                     Column {
 
                         Text(
-                            text = "Good evening 👋",
+                            text = "Good evening ",
                             color = CivicWhite.copy(alpha = 0.75f),
                             fontSize = 14.sp
                         )
