@@ -1,11 +1,10 @@
 package com.example.civilink.data
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class ReportViewModel(
     private val repository: ReportRepository = ReportRepository()
@@ -40,6 +39,25 @@ class ReportViewModel(
         )
     }
 
+    fun uploadImage(
+        uri: Uri,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        _isLoading.value = true
+        repository.uploadImage(
+            imageUri = uri,
+            onSuccess = { url ->
+                _isLoading.value = false
+                onSuccess(url)
+            },
+            onError = { err ->
+                _isLoading.value = false
+                onError(err)
+            }
+        )
+    }
+
     fun createReport(
         report: Report,
         onSuccess: (Report) -> Unit,
@@ -51,7 +69,6 @@ class ReportViewModel(
             onSuccess = { newReport ->
                 _isLoading.value = false
                 onSuccess(newReport)
-                // Reports list will auto-update via the repository listener
             },
             onError = { errorMessage ->
                 _isLoading.value = false
@@ -68,7 +85,7 @@ class ReportViewModel(
             reportId = reportId,
             newStatus = newStatus,
             onSuccess = {
-                // Success
+                // Status updated successfully
             },
             onError = { errorMessage ->
                 _error.value = errorMessage

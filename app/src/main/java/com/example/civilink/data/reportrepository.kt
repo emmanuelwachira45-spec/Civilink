@@ -6,10 +6,33 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+import android.net.Uri
+import com.google.firebase.storage.FirebaseStorage
+
 class ReportRepository {
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val reportsRef: DatabaseReference = database.getReference("reports")
+
+    fun uploadImage(
+        imageUri: Uri,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val fileName = "reports/${System.currentTimeMillis()}.jpg"
+        val storageRef = storage.reference.child(fileName)
+
+        storageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { uri ->
+                    onSuccess(uri.toString())
+                }
+            }
+            .addOnFailureListener {
+                onError(it.message ?: "Image upload failed")
+            }
+    }
 
     // Get all reports from Firebase
     fun getReports(

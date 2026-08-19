@@ -75,6 +75,9 @@ import com.example.civilink.ui.theme.CivicWhite
 import com.example.civilink.ui.theme.CivilinkTheme
 
 
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+
 @Composable
 fun AdminDashboardScreen(
     navController: NavController,
@@ -663,40 +666,32 @@ fun AdminReportCard(
 
                 Box(
                     modifier = Modifier
-                        .size(45.dp)
-                        .clip(CircleShape)
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(CivicLightBlue),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    Icon(
-                        imageVector = when {
-                            report.category.contains(
-                                "Water",
-                                ignoreCase = true
-                            ) -> Icons.Default.WaterDrop
-
-                            report.category.contains(
-                                "Electricity",
-                                ignoreCase = true
-                            ) -> Icons.Default.ElectricBolt
-
-                            report.category.contains(
-                                "Road",
-                                ignoreCase = true
-                            ) -> Icons.Default.Build
-
-                            report.category.contains(
-                                "Waste",
-                                ignoreCase = true
-                            ) -> Icons.Default.Delete
-
-                            else -> Icons.Default.Report
-                        },
-                        contentDescription = null,
-                        tint = CivicBlue,
-                        modifier = Modifier.size(21.dp)
-                    )
+                    if (report.imageUrl != null) {
+                        AsyncImage(
+                            model = report.imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = when {
+                                report.category.contains("Water", ignoreCase = true) -> Icons.Default.WaterDrop
+                                report.category.contains("Electricity", ignoreCase = true) -> Icons.Default.ElectricBolt
+                                report.category.contains("Road", ignoreCase = true) -> Icons.Default.Build
+                                report.category.contains("Waste", ignoreCase = true) -> Icons.Default.Delete
+                                else -> Icons.Default.Report
+                            },
+                            contentDescription = null,
+                            tint = CivicBlue,
+                            modifier = Modifier.size(21.dp)
+                        )
+                    }
                 }
 
 
@@ -918,7 +913,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Road",
                     location = "Main St, City Center",
                     description = "Large pothole causing traffic delays.",
-                    status = "Pending"
+                    status = "Pending",
+                    imageUrl = null
                 ),
                 Report(
                     id = "2",
@@ -926,7 +922,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Water",
                     location = "2nd Ave, North District",
                     description = "Water main burst near the park.",
-                    status = "In Progress"
+                    status = "In Progress",
+                    imageUrl = null
                 ),
                 Report(
                     id = "3",
@@ -934,7 +931,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Electricity",
                     location = "Park Rd, South Side",
                     description = "The light at the corner is flickering.",
-                    status = "Resolved"
+                    status = "Resolved",
+                    imageUrl = null
                 )
             ),
             isLoading = false,

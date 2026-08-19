@@ -1,6 +1,7 @@
 package com.example.civilink.ui.screens.homescreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,6 +74,9 @@ import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
 
+
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun HomeScreen(
@@ -199,7 +203,7 @@ fun HomeScreenContent(
                     Column {
 
                         Text(
-                            text = "Good evening ",
+                            text = "Good evening 👋",
                             color = CivicWhite.copy(alpha = 0.75f),
                             fontSize = 14.sp
                         )
@@ -268,6 +272,8 @@ fun HomeScreenContent(
                     },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = CivicText,
+                        unfocusedTextColor = CivicText,
                         focusedContainerColor = CivicWhite,
                         unfocusedContainerColor = CivicWhite,
                         focusedBorderColor = CivicTeal,
@@ -537,6 +543,10 @@ fun HomeScreenContent(
                     title = report.title,
                     category = report.category,
                     status = report.status,
+                    imageUrl = report.imageUrl,
+                    onClick = {
+                        navController.navigate("ReportDetail/${report.id}")
+                    }
                 )
             }
 
@@ -719,10 +729,12 @@ fun RecentReportCard(
     title: String,
     category: String,
     status: String,
+    imageUrl: String? = null,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -743,12 +755,20 @@ fun RecentReportCard(
                     .background(CivicLightBlue),
                 contentAlignment = Alignment.Center
             ) {
-
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = null,
-                    tint = CivicBlue
-                )
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = null,
+                        tint = CivicBlue
+                    )
+                }
             }
 
             Spacer(
@@ -800,8 +820,8 @@ fun HomeScreenPreview() {
     HomeScreenContent(
         navController = rememberNavController(),
         reports = listOf(
-            Report(id = "1", title = "Pothole", category = "Roads", status = "Pending", userId = "test_user"),
-            Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user")
+            Report(id = "1", title = "Pothole", category = "Roads", status = "Pending", userId = "test_user", imageUrl = null),
+            Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user", imageUrl = null)
         ),
         isLoading = false,
         error = null,

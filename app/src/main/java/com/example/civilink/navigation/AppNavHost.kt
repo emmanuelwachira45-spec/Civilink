@@ -3,9 +3,11 @@ package com.example.civilink.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.civilink.ui.screens.createreport.CreateReportScreen
 import com.example.civilink.ui.screens.admindashboard.AdminDashboardScreen
 import com.example.civilink.ui.screens.homescreen.HomeScreen
@@ -57,8 +59,12 @@ fun AppNavHost(
         }
 
         // Report Detail Screen
-        composable(ROUT_REPORTDETAIL) {
-            ReportDetailScreen(navController)
+        composable(
+            route = ROUT_REPORTDETAIL,
+            arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val reportId = backStackEntry.arguments?.getString("reportId") ?: ""
+            ReportDetailScreen(navController, reportId)
         }
 
         // Settings Screen
