@@ -1,5 +1,6 @@
 package com.example.civilink.data
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,46 +10,23 @@ class ReportViewModel : ViewModel() {
 
     private val repository = ReportRepository()
 
+    private val _reports = MutableStateFlow<List<Report>>(emptyList())
+    val reports: StateFlow<List<Report>> = _reports.asStateFlow()
 
-    // ─────────────────────────────────────
-    // Reports
-    // ─────────────────────────────────────
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _reports =
-        MutableStateFlow<List<Report>>(emptyList())
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
-    val reports: StateFlow<List<Report>> =
-        _reports.asStateFlow()
+    init {
+        loadReports()
+    }
 
-
-    // ─────────────────────────────────────
-    // Loading
-    // ─────────────────────────────────────
-
-    private val _isLoading =
-        MutableStateFlow(false)
-
-    val isLoading: StateFlow<Boolean> =
-        _isLoading.asStateFlow()
-
-
-    // ─────────────────────────────────────
-    // Error
-    // ─────────────────────────────────────
-
-    private val _error =
-        MutableStateFlow<String?>(null)
-
-    val error: StateFlow<String?> =
-        _error.asStateFlow()
-
-
-    // ─────────────────────────────────────
-    // Load Reports
-    // ─────────────────────────────────────
-
+    /**
+     * Loads reports from the repository.
+     */
     fun loadReports() {
-
         _isLoading.value = true
         _error.value = null
 
@@ -64,16 +42,36 @@ class ReportViewModel : ViewModel() {
         )
     }
 
+    /**
+     * Uploads an image and returns the URL.
+     */
+    fun uploadImage(
+        uri: Uri,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        _isLoading.value = true
+        repository.uploadImage(
+            imageUri = uri,
+            onSuccess = { url ->
+                _isLoading.value = false
+                onSuccess(url)
+            },
+            onError = { err ->
+                _isLoading.value = false
+                onError(err)
+            }
+        )
+    }
 
-    // ─────────────────────────────────────
-    // Create / Submit Report
-    // ─────────────────────────────────────
-
+    /**
+     * Creates a new report.
+     */
     fun createReport(
         report: Report,
-        onSuccess: () -> Unit = {}
+        onSuccess: (Report) -> Unit = {},
+        onError: (String) -> Unit = {}
     ) {
-
         _isLoading.value = true
         _error.value = null
 
@@ -81,43 +79,35 @@ class ReportViewModel : ViewModel() {
             report = report,
             onSuccess = { savedReport ->
                 _isLoading.value = false
-                // Add the actual Firebase report
-                // including its generated ID
-                _reports.value =
-                    listOf(savedReport) + _reports.value
-                onSuccess()
+                _reports.value = listOf(savedReport) + _reports.value
+                onSuccess(savedReport)
             },
             onError = { errorMessage ->
                 _error.value = errorMessage
                 _isLoading.value = false
+                onError(errorMessage)
             }
         )
     }
 
-
-    // ─────────────────────────────────────
-    // Update Report Status
-    // ─────────────────────────────────────
-
+    /**
+     * Updates the status of an existing report.
+     */
     fun updateReportStatus(
         reportId: String,
         newStatus: String
     ) {
-
         repository.updateReportStatus(
             reportId = reportId,
             newStatus = newStatus,
             onSuccess = {
-                _reports.value =
-                    _reports.value.map { report ->
-                        if (report.id == reportId) {
-                            report.copy(
-                                status = newStatus
-                            )
-                        } else {
-                            report
-                        }
+                _reports.value = _reports.value.map { report ->
+                    if (report.id == reportId) {
+                        report.copy(status = newStatus)
+                    } else {
+                        report
                     }
+                }
             },
             onError = { errorMessage ->
                 _error.value = errorMessage
@@ -125,13 +115,10 @@ class ReportViewModel : ViewModel() {
         )
     }
 
-
-    // ─────────────────────────────────────
-    // Clear Error
-    // ─────────────────────────────────────
-
+    /**
+     * Clears the current error message.
+     */
     fun clearError() {
-
         _error.value = null
     }
 }

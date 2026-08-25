@@ -63,7 +63,13 @@ import androidx.navigation.compose.rememberNavController
 
 import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import com.example.civilink.navigation.ROUT_PROFILESCREEN
+import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_CREATEREPORT
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -119,6 +125,7 @@ fun HomeScreenContent(
     onLoadReports: () -> Unit = {}
 ) {
 
+    val context = LocalContext.current
     var searchText by remember {
         mutableStateOf("")
     }
@@ -153,13 +160,17 @@ fun HomeScreenContent(
         it.status.equals("Resolved", ignoreCase = true)
     }
 
+    // Dynamic notification count
+    val notificationCount = progressCount + resolvedCount
+
     // Search filtering
     val filteredReports = myReports.filter { report ->
 
         searchText.isBlank() ||
                 report.title.contains(searchText, ignoreCase = true) ||
                 report.category.contains(searchText, ignoreCase = true) ||
-                report.location.contains(searchText, ignoreCase = true)
+                report.location.contains(searchText, ignoreCase = true) ||
+                report.status.contains(searchText, ignoreCase = true)
     }
 
 
@@ -203,7 +214,7 @@ fun HomeScreenContent(
                     Column {
 
                         Text(
-                            text = "Good evening 👋",
+                            text = "Good evening ",
                             color = CivicWhite.copy(alpha = 0.75f),
                             fontSize = 14.sp
                         )
@@ -224,25 +235,54 @@ fun HomeScreenContent(
                         }
                     }
 
-                    BadgedBox(
-                        badge = {
-                            Badge {
-                                Text("3")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = {
+                                navController.navigate(ROUT_PROFILESCREEN)
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = CivicWhite
+                            )
                         }
-                    ) {
 
                         IconButton(
                             onClick = {
-                                // Notifications
+                                navController.navigate(ROUT_SETTINGSCREEN)
                             }
                         ) {
-
                             Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
                                 tint = CivicWhite
                             )
+                        }
+
+                        BadgedBox(
+                            badge = {
+                                if (notificationCount > 0) {
+                                    Badge {
+                                        Text(notificationCount.toString())
+                                    }
+                                }
+                            }
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    val message = if (notificationCount > 0) 
+                                        "You have $notificationCount updates on your reports" 
+                                    else "No new updates"
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = CivicWhite
+                                )
+                            }
                         }
                     }
                 }
@@ -412,7 +452,10 @@ fun HomeScreenContent(
 
                     CategoryCard(
                         name = category.first,
-                        icon = category.second
+                        icon = category.second,
+                        onClick = {
+                            searchText = category.first
+                        }
                     )
                 }
             }
@@ -446,19 +489,28 @@ fun HomeScreenContent(
                 ReportStatusCard(
                     number = pendingCount.toString(),
                     label = "Pending",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "Pending"
+                    }
                 )
 
                 ReportStatusCard(
                     number = progressCount.toString(),
                     label = "In Progress",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "In Progress"
+                    }
                 )
 
                 ReportStatusCard(
                     number = resolvedCount.toString(),
                     label = "Resolved",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "Resolved"
+                    }
                 )
             }
 
@@ -487,6 +539,10 @@ fun HomeScreenContent(
 
                 Text(
                     text = "View all",
+                    modifier = Modifier.clickable {
+                        searchText = ""
+                        Toast.makeText(context, "Showing all reports", Toast.LENGTH_SHORT).show()
+                    },
                     color = CivicBlue,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -623,13 +679,14 @@ fun HomeScreenContent(
 fun CategoryCard(
     name: String,
     icon: ImageVector,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
         modifier = Modifier.size(
             width = 100.dp,
             height = 105.dp
-        ),
+        ).clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -682,10 +739,11 @@ fun ReportStatusCard(
     number: String,
     label: String,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = modifier,
+        modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite

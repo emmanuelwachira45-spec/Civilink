@@ -346,22 +346,21 @@ fun LoginScreen(navController: NavController) {
                                         val uid = user.uid
 
                                         FirebaseDatabase.getInstance()
-                                            .getReference("admins")
+                                            .getReference("users")
                                             .child(uid)
                                             .get()
                                             .addOnSuccessListener { snapshot ->
                                                 isLoading = false
-                                                if (snapshot.exists()) {
-
+                                                val role = snapshot.child("role").getValue(String::class.java)
+                                                
+                                                if (role == "admin") {
                                                     // User is an admin
                                                     navController.navigate(ROUT_ADMINDASHBOARD) {
                                                         popUpTo(ROUT_LOGINSCREEN) {
                                                             inclusive = true
                                                         }
                                                     }
-
                                                 } else {
-
                                                     // Normal user
                                                     navController.navigate(ROUT_HOMESCREEN) {
                                                         popUpTo(ROUT_LOGINSCREEN) {
@@ -370,12 +369,13 @@ fun LoginScreen(navController: NavController) {
                                                     }
                                                 }
                                             }
-                                            .addOnFailureListener {
+                                            .addOnFailureListener { exception ->
                                                 isLoading = false
+                                                val errorMessage = exception.message ?: "Verification failed"
                                                 Toast.makeText(
                                                     context,
-                                                    "Could not verify account",
-                                                    Toast.LENGTH_SHORT
+                                                    "Error: $errorMessage",
+                                                    Toast.LENGTH_LONG
                                                 ).show()
                                             }
                                     }

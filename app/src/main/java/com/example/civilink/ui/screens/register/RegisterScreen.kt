@@ -477,6 +477,13 @@ fun RegisterScreen(navController: NavController) {
                                                     .setValue(userData)
                                                     .addOnCompleteListener { databaseTask ->
 
+                                                        if (databaseTask.isSuccessful && role == "admin") {
+                                                            // Also add to admins node for login verification
+                                                            database.getReference("admins")
+                                                                .child(userId)
+                                                                .setValue(true)
+                                                        }
+
                                                         isLoading = false
 
                                                         if (databaseTask.isSuccessful) {
@@ -505,10 +512,10 @@ fun RegisterScreen(navController: NavController) {
                                                             }
 
                                                         } else {
-
+                                                            val dbError = databaseTask.exception?.message ?: "Database error"
                                                             Toast.makeText(
                                                                 context,
-                                                                "Account created, but profile could not be saved.",
+                                                                "Profile error: $dbError",
                                                                 Toast.LENGTH_LONG
                                                             ).show()
                                                         }

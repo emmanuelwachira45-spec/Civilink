@@ -1,22 +1,74 @@
 package com.example.civilink.data
 
+import android.net.Uri
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 
 class ReportRepository {
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val reportsRef: DatabaseReference = database.getReference("reports")
 
     /**
-     * Get all reports. 
-     * Implementation removed as per request.
+     * Uploads an image to Firebase Storage.
+     */
+    fun uploadImage(
+        imageUri: Uri,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val fileName = "reports/${System.currentTimeMillis()}.jpg"
+        val storageRef = storage.reference.child(fileName)
+
+        storageRef.putFile(imageUri)
+            .addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { uri ->
+                    onSuccess(uri.toString())
+                }
+            }
+            .addOnFailureListener {
+                onError(it.message ?: "Image upload failed")
+            }
+    }
+
+    /**
+     * Get all reports from Firebase.
      */
     fun getReports(
         onSuccess: (List<Report>) -> Unit,
         onError: (String) -> Unit
     ) {
-        // Implementation logic removed
+        reportsRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val reportsList = mutableListOf<Report>()
+                
+                for (reportSnapshot in snapshot.children) {
+                    try {
+                        val report = reportSnapshot.getValue(Report::class.java)
+                        if (report != null) {
+                            // Ensure ID matches the Firebase key
+                            val id = reportSnapshot.key ?: ""
+                            reportsList.add(report.copy(id = id))
+                        }
+                    } catch (e: Exception) {
+                        // Skip reports that fail to parse
+                    }
+                }
+                
+                // Sort by timestamp descending
+                reportsList.sortByDescending { it.timestamp }
+                onSuccess(reportsList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                onError(error.message)
+            }
+        })
     }
 
     /**
@@ -38,7 +90,7 @@ class ReportRepository {
         val reportWithId = report.copy(id = reportKey)
 
         // Convert to Map to bypass analyzer/resolution issues with data classes
-        val reportMap = mapOf<String, Any>(
+        val reportMap = mapOf<String, Any?>(
             "id" to reportWithId.id,
             "userId" to reportWithId.userId,
             "title" to reportWithId.title,
@@ -46,7 +98,8 @@ class ReportRepository {
             "location" to reportWithId.location,
             "description" to reportWithId.description,
             "status" to reportWithId.status,
-            "timestamp" to reportWithId.timestamp
+            "timestamp" to reportWithId.timestamp,
+            "imageUrl" to reportWithId.imageUrl
         )
 
         pushRef.setValue(reportMap)

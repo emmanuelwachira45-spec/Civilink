@@ -1,6 +1,8 @@
 package com.example.civilink.ui.screens.admindashboard
 
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -121,6 +124,8 @@ fun AdminDashboardContent(
     onBackClick: () -> Unit,
     onStatusChanged: (String, String) -> Unit
 ) {
+
+    val context = LocalContext.current
 
     // ─────────────────────────────────────
     // Statistics
@@ -456,7 +461,7 @@ fun AdminDashboardContent(
 
             // Real Firebase reports
 
-            reports.take(10).forEach { report ->
+            reports.forEach { report ->
 
                 AdminReportCard(
                     report = report,
@@ -502,19 +507,28 @@ fun AdminDashboardContent(
                 AdminActionItem(
                     icon = Icons.AutoMirrored.Filled.Assignment,
                     title = "Manage all reports",
-                    subtitle = "View and update citizen reports"
+                    subtitle = "View and update citizen reports",
+                    onClick = {
+                        Toast.makeText(context, "Navigating to reports management...", Toast.LENGTH_SHORT).show()
+                    }
                 )
 
                 AdminActionItem(
                     icon = Icons.Default.People,
                     title = "Manage citizens",
-                    subtitle = "View registered citizens"
+                    subtitle = "View registered citizens",
+                    onClick = {
+                        Toast.makeText(context, "Citizen management available soon.", Toast.LENGTH_SHORT).show()
+                    }
                 )
 
                 AdminActionItem(
                     icon = Icons.Default.LocationOn,
                     title = "View report locations",
-                    subtitle = "See where issues are being reported"
+                    subtitle = "See where issues are being reported",
+                    onClick = {
+                        Toast.makeText(context, "Opening interactive map...", Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
 
@@ -833,12 +847,14 @@ fun AdminReportCard(
 fun AdminActionItem(
     icon: ImageVector,
     title: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit = {}
 ) {
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(
                 horizontal = 18.dp,
                 vertical = 15.dp
