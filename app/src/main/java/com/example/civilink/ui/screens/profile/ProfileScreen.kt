@@ -48,7 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.navigation.ROUT_LOGINSCREEN
+import com.example.civilink.navigation.ROUT_SETTINGSCREEN
+import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.ui.components.AppLogo
+import com.google.firebase.auth.FirebaseAuth
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -347,7 +351,7 @@ fun ProfileScreen(navController: NavController) {
                         title = "Settings",
                         subtitle = "App preferences and security",
                     ) {
-                        // Settings
+                        navController.navigate(ROUT_SETTINGSCREEN)
                     }
                 }
             }
@@ -359,7 +363,12 @@ fun ProfileScreen(navController: NavController) {
             // Logout
             FilledTonalButton(
                 onClick = {
-                    // Logout logic
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate(ROUT_LOGINSCREEN) {
+                        popUpTo(ROUT_SPLASH) {
+                            inclusive = true
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

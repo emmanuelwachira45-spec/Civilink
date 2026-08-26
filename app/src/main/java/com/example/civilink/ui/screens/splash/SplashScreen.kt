@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.civilink.navigation.ROUT_ADMINDASHBOARD
+import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_ONBOARDING1
 import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.ui.components.AppLogo
@@ -47,22 +49,46 @@ import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicWhite
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
 
-    // Navigate from Splash → Onboarding 1
+    // Navigate from Splash → Home or Onboarding
     LaunchedEffect(Unit) {
 
-        delay(3000)
+        delay(2500)
 
-        navController.navigate(ROUT_ONBOARDING1) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
 
-            // Remove Splash from the back stack
-            popUpTo(ROUT_SPLASH) {
-                inclusive = true
+        if (currentUser == null) {
+            navController.navigate(ROUT_ONBOARDING1) {
+                popUpTo(ROUT_SPLASH) { inclusive = true }
             }
+        } else {
+            // Check if admin
+            FirebaseDatabase.getInstance().getReference("admins")
+                .child(currentUser.uid)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    if (snapshot.exists()) {
+                        navController.navigate(ROUT_ADMINDASHBOARD) {
+                            popUpTo(ROUT_SPLASH) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(ROUT_HOMESCREEN) {
+                            popUpTo(ROUT_SPLASH) { inclusive = true }
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    // Fallback to home if check fails
+                    navController.navigate(ROUT_HOMESCREEN) {
+                        popUpTo(ROUT_SPLASH) { inclusive = true }
+                    }
+                }
         }
     }
 

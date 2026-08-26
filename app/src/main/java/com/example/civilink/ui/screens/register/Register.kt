@@ -21,10 +21,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -59,7 +56,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.civilink.navigation.ROUT_ADMINDASHBOARD
 import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
-import com.example.civilink.navigation.ROUT_REGISTER
+import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -469,17 +466,23 @@ fun RegisterScreen(navController: NavController) {
                                                     "createdAt" to System.currentTimeMillis()
                                                 )
 
-                                                // Save user profile
-                                                // to Realtime Database
+                                                // Save user profile to Realtime Database
                                                 database
                                                     .getReference("users")
                                                     .child(userId)
                                                     .setValue(userData)
                                                     .addOnCompleteListener { databaseTask ->
 
-                                                        isLoading = false
-
                                                         if (databaseTask.isSuccessful) {
+                                                            
+                                                            // If admin, also save to admins node
+                                                            if (role == "admin") {
+                                                                database.getReference("admins")
+                                                                    .child(userId)
+                                                                    .setValue(true)
+                                                            }
+
+                                                            isLoading = false
 
                                                             Toast.makeText(
                                                                 context,
@@ -494,18 +497,14 @@ fun RegisterScreen(navController: NavController) {
                                                             navController.navigate(
                                                                 destination
                                                             ) {
-
-                                                                popUpTo(
-                                                                    ROUT_REGISTER
-                                                                ) {
+                                                                popUpTo(ROUT_SPLASH) {
                                                                     inclusive = true
                                                                 }
-
                                                                 launchSingleTop = true
                                                             }
 
                                                         } else {
-
+                                                            isLoading = false
                                                             Toast.makeText(
                                                                 context,
                                                                 "Account created, but profile could not be saved.",

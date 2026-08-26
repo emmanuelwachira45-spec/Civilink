@@ -26,7 +26,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -35,8 +37,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +70,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
 import com.example.civilink.navigation.ROUT_CREATEREPORT
+import com.example.civilink.navigation.ROUT_HOMESCREEN
+import com.example.civilink.navigation.ROUT_PROFILESCREEN
+import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -161,140 +171,227 @@ fun HomeScreenContent(
     }
 
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(CivicLightBlue)
-    ) {
-
-        // ─────────────────────────────
-        // Top Header
-        // ─────────────────────────────
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            CivicNavy,
-                            CivicBlue
-                        )
+    Scaffold(
+        bottomBar = {
+            NavigationBar(
+                containerColor = CivicWhite,
+                tonalElevation = 8.dp
+            ) {
+                NavigationBarItem(
+                    selected = true,
+                    onClick = { /* Already here */ },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    label = { Text("Home", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = CivicBlue,
+                        selectedTextColor = CivicBlue,
+                        unselectedIconColor = CivicGray,
+                        unselectedTextColor = CivicGray,
+                        indicatorColor = CivicLightBlue
                     )
                 )
-                .padding(
-                    start = 22.dp,
-                    end = 22.dp,
-                    top = 22.dp,
-                    bottom = 28.dp
-                )
-        ) {
 
-            Column {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Column {
-
-                        Text(
-                            text = "Good evening ",
-                            color = CivicWhite.copy(alpha = 0.75f),
-                            fontSize = 14.sp
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(3.dp)
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            AppLogo(size = 36.dp)
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "CiviLink",
-                                color = CivicWhite,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { 
+                        navController.navigate(ROUT_CREATEREPORT) {
+                            launchSingleTop = true
                         }
-                    }
-
-                    BadgedBox(
-                        badge = {
-                            Badge {
-                                Text("3")
-                            }
-                        }
-                    ) {
-
-                        IconButton(
-                            onClick = {
-                                // Notifications
-                            }
-                        ) {
-
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
-                                tint = CivicWhite
-                            )
-                        }
-                    }
-                }
-
-                Spacer(
-                    modifier = Modifier.height(20.dp)
+                    },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Create") },
+                    label = { Text("Create", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        unselectedIconColor = CivicGray,
+                        unselectedTextColor = CivicGray
+                    )
                 )
 
-                // Search
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = {
-                        searchText = it
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { 
+                        navController.navigate(ROUT_PROFILESCREEN) {
+                            launchSingleTop = true
+                        }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = {
-                        Text(
-                            text = "Search community issues..."
-                        )
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                    label = { Text("Profile", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        unselectedIconColor = CivicGray,
+                        unselectedTextColor = CivicGray
+                    )
+                )
+
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { 
+                        navController.navigate(ROUT_SETTINGSCREEN) {
+                            launchSingleTop = true
+                        }
                     },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
-                        )
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = CivicWhite,
-                        unfocusedContainerColor = CivicWhite,
-                        focusedBorderColor = CivicTeal,
-                        unfocusedBorderColor = CivicWhite.copy(alpha = 0.5f)
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+                    label = { Text("Settings", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        unselectedIconColor = CivicGray,
+                        unselectedTextColor = CivicGray
                     )
                 )
             }
         }
-
-
-        // ─────────────────────────────
-        // Main Content
-        // ─────────────────────────────
+    ) { paddingValues ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(
-                    horizontal = 18.dp,
-                    vertical = 18.dp
-                )
+                .padding(paddingValues)
+                .background(CivicLightBlue)
         ) {
+
+            // ─────────────────────────────
+            // Top Header
+            // ─────────────────────────────
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                CivicNavy,
+                                CivicBlue
+                            )
+                        )
+                    )
+                    .padding(
+                        start = 22.dp,
+                        end = 22.dp,
+                        top = 22.dp,
+                        bottom = 28.dp
+                    )
+            ) {
+
+                Column {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Column {
+
+                            Text(
+                                text = "Good evening ",
+                                color = CivicWhite.copy(alpha = 0.75f),
+                                fontSize = 14.sp
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(3.dp)
+                            )
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AppLogo(size = 36.dp)
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "CiviLink",
+                                    color = CivicWhite,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            BadgedBox(
+                                badge = {
+                                    Badge {
+                                        Text("3")
+                                    }
+                                }
+                            ) {
+
+                                IconButton(
+                                    onClick = {
+                                        // Notifications
+                                    }
+                                ) {
+
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = CivicWhite
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                onClick = {
+                                    navController.navigate(ROUT_PROFILESCREEN) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = CivicWhite
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
+
+                    // Search
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = {
+                            searchText = it
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = {
+                            Text(
+                                text = "Search community issues..."
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search"
+                            )
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = CivicWhite,
+                            unfocusedContainerColor = CivicWhite,
+                            focusedBorderColor = CivicTeal,
+                            unfocusedBorderColor = CivicWhite.copy(alpha = 0.5f)
+                        )
+                    )
+                }
+            }
+
+
+            // ─────────────────────────────
+            // Main Content
+            // ─────────────────────────────
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(
+                        horizontal = 18.dp,
+                        vertical = 18.dp
+                    )
+            ) {
 
             // ─────────────────────────────
             // Report Issue Card
@@ -604,6 +701,7 @@ fun HomeScreenContent(
             )
         }
     }
+}
 }
 
 

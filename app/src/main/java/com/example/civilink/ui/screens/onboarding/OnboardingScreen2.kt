@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
+import com.example.civilink.navigation.ROUT_ONBOARDING1
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -69,8 +70,8 @@ fun Onboarding2Screen(navController: NavController) {
         Button(
             onClick = {
                 navController.navigate(ROUT_LOGINSCREEN) {
-                    popUpTo(ROUT_LOGINSCREEN) {
-                        inclusive = false
+                    popUpTo(ROUT_ONBOARDING1) {
+                        inclusive = true
                     }
                 }
             },
