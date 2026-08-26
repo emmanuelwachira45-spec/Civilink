@@ -171,6 +171,18 @@ fun CreateReportContent(
         }
     }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val uri = context.createTempPictureUri()
+            tempImageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val isFormValid = title.isNotBlank() && title.length >= 5 &&
                       location.isNotBlank() && location.length >= 3 &&
                       description.isNotBlank() && description.length >= 10
@@ -273,9 +285,7 @@ fun CreateReportContent(
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.clickable {
-                                        val uri = context.createTempPictureUri()
-                                        tempImageUri = uri
-                                        cameraLauncher.launch(uri)
+                                        permissionLauncher.launch(android.Manifest.permission.CAMERA)
                                     }
                                 ) {
                                     Icon(Icons.Default.CameraAlt, null, tint = CivicBlue, modifier = Modifier.size(32.dp))

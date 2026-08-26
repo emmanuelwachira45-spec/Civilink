@@ -84,20 +84,27 @@ import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
 @Composable
 fun AdminDashboardScreen(
     navController: NavController,
     reportViewModel: ReportViewModel = viewModel()
 ) {
 
+    val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
 
     val reports by reportViewModel.reports.collectAsState()
     val isLoading by reportViewModel.isLoading.collectAsState()
     val error by reportViewModel.error.collectAsState()
 
+    // Real-time synchronization
     LaunchedEffect(Unit) {
-
         if (!isPreview) {
             reportViewModel.loadReports()
         }
@@ -119,7 +126,13 @@ fun AdminDashboardScreen(
         onStatusChanged = { reportId, newStatus ->
             reportViewModel.updateReportStatus(
                 reportId = reportId,
-                newStatus = newStatus
+                newStatus = newStatus,
+                onSuccess = {
+                    Toast.makeText(context, "Status updated to $newStatus", Toast.LENGTH_SHORT).show()
+                },
+                onError = {
+                    Toast.makeText(context, "Failed to update: $it", Toast.LENGTH_SHORT).show()
+                }
             )
         }
     )
@@ -135,24 +148,24 @@ fun AdminDashboardContent(
     onStatusChanged: (String, String) -> Unit
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    var searchText by remember { mutableStateOf("") }
 
     // ─────────────────────────────────────
     // Statistics
     // ─────────────────────────────────────
 
+    val filteredReports = reports.filter { report ->
+        report.title.contains(searchText, ignoreCase = true) ||
+                report.category.contains(searchText, ignoreCase = true) ||
+                report.location.contains(searchText, ignoreCase = true)
+    }
+
     val totalReports = reports.size
-
-    val pendingReports = reports.count {
-        it.status.equals("Pending", ignoreCase = true)
-    }
-
-    val inProgressReports = reports.count {
-        it.status.equals("In Progress", ignoreCase = true)
-    }
-
-    val resolvedReports = reports.count {
-        it.status.equals("Resolved", ignoreCase = true)
-    }
+    val pendingReports = reports.count { it.status.equals("Pending", ignoreCase = true) }
+    val inProgressReports = reports.count { it.status.equals("In Progress", ignoreCase = true) }
+    val resolvedReports = reports.count { it.status.equals("Resolved", ignoreCase = true) }
 
 
     Column(
@@ -236,9 +249,7 @@ fun AdminDashboardContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
+                .verticalScroll(scrollState)
                 .padding(18.dp)
         ) {
 
@@ -293,6 +304,25 @@ fun AdminDashboardContent(
                 modifier = Modifier.height(20.dp)
             )
 
+            // Search Bar for Admin
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Search all reports...") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CivicWhite,
+                    unfocusedContainerColor = CivicWhite,
+                    focusedBorderColor = CivicTeal,
+                    unfocusedBorderColor = CivicWhite.copy(alpha = 0.5f)
+                )
+            )
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
 
             // ─────────────────────────────
             // Overview
@@ -469,10 +499,10 @@ fun AdminDashboardContent(
 
             // No reports
 
-            if (!isLoading && reports.isEmpty()) {
+            if (!isLoading && filteredReports.isEmpty()) {
 
                 Text(
-                    text = "No reports have been submitted yet.",
+                    text = if (reports.isEmpty()) "No reports have been submitted yet." else "No reports match your search.",
                     color = CivicGray,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(
@@ -484,7 +514,7 @@ fun AdminDashboardContent(
 
             // Real Firebase reports
 
-            reports.forEach { report ->
+            filteredReports.forEach { report ->
 
                 AdminReportCard(
                     report = report,
@@ -531,19 +561,30 @@ fun AdminDashboardContent(
                     icon = Icons.AutoMirrored.Filled.Assignment,
                     title = "Manage all reports",
                     subtitle = "View and update citizen reports"
-                )
+                ) {
+                    coroutineScope.launch {
+                        // Scroll to the "Recent reports" section roughly
+                        scrollState.animateScrollTo(1000)
+                    }
+                    Toast.makeText(context, "Showing all community reports", Toast.LENGTH_SHORT).show()
+                }
 
                 AdminActionItem(
                     icon = Icons.Default.People,
-                    title = "Manage citizens",
-                    subtitle = "View registered citizens"
-                )
+                    title = "View Community Members",
+                    subtitle = "Citizens registered in the system"
+                ) {
+                    Toast.makeText(context, "Members: ${reports.map { it.userId }.distinct().size} active reporters", Toast.LENGTH_LONG).show()
+                }
 
                 AdminActionItem(
                     icon = Icons.Default.LocationOn,
-                    title = "View report locations",
-                    subtitle = "See where issues are being reported"
-                )
+                    title = "View Hotspots",
+                    subtitle = "Most reported locations"
+                ) {
+                    val topLocation = reports.groupBy { it.location }.maxByOrNull { it.value.size }?.key ?: "None"
+                    Toast.makeText(context, "Most active area: $topLocation", Toast.LENGTH_LONG).show()
+                }
             }
 
 
@@ -868,6 +909,7 @@ fun AdminActionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(
                 horizontal = 18.dp,
                 vertical = 15.dp

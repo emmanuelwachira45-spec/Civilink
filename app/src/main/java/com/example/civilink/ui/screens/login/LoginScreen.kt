@@ -351,23 +351,43 @@ fun LoginScreen(navController: NavController) {
                                             .get()
                                             .addOnSuccessListener { snapshot ->
                                                 isLoading = false
-                                                val role = snapshot.child("role").getValue(String::class.java)
+                                                val role = snapshot.child("role").getValue(String::class.java)?.lowercase()
+                                                val emailFromDb = snapshot.child("email").getValue(String::class.java)?.lowercase()
                                                 
-                                                if (role == "admin") {
-                                                    // User is an admin
-                                                    navController.navigate(ROUT_ADMINDASHBOARD) {
-                                                        popUpTo(ROUT_LOGINSCREEN) {
-                                                            inclusive = true
+                                                // Secondary check using admins node
+                                                FirebaseDatabase.getInstance().getReference("admins").child(uid).get()
+                                                    .addOnSuccessListener { adminSnapshot ->
+                                                        val isAdminNode = adminSnapshot.exists() && adminSnapshot.getValue(Boolean::class.java) == true
+                                                        
+                                                        if (role == "admin" || isAdminNode || emailFromDb == "admin@civilink.com") {
+                                                            // User is an admin
+                                                            Toast.makeText(context, "Welcome Admin", Toast.LENGTH_SHORT).show()
+                                                            navController.navigate(ROUT_ADMINDASHBOARD) {
+                                                                popUpTo(ROUT_LOGINSCREEN) {
+                                                                    inclusive = true
+                                                                }
+                                                            }
+                                                        } else {
+                                                            // Normal user
+                                                            navController.navigate(ROUT_HOMESCREEN) {
+                                                                popUpTo(ROUT_LOGINSCREEN) {
+                                                                    inclusive = true
+                                                                }
+                                                            }
                                                         }
                                                     }
-                                                } else {
-                                                    // Normal user
-                                                    navController.navigate(ROUT_HOMESCREEN) {
-                                                        popUpTo(ROUT_LOGINSCREEN) {
-                                                            inclusive = true
+                                                    .addOnFailureListener {
+                                                        // Fallback to role check if admins node check fails
+                                                        if (role == "admin" || emailFromDb == "admin@civilink.com") {
+                                                            navController.navigate(ROUT_ADMINDASHBOARD) {
+                                                                popUpTo(ROUT_LOGINSCREEN) { inclusive = true }
+                                                            }
+                                                        } else {
+                                                            navController.navigate(ROUT_HOMESCREEN) {
+                                                                popUpTo(ROUT_LOGINSCREEN) { inclusive = true }
+                                                            }
                                                         }
                                                     }
-                                                }
                                             }
                                             .addOnFailureListener { exception ->
                                                 isLoading = false

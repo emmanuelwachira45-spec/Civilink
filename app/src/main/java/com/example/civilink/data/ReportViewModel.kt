@@ -19,6 +19,9 @@ class ReportViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _notificationCount = MutableStateFlow(0)
+    val notificationCount: StateFlow<Int> = _notificationCount.asStateFlow()
+
     init {
         loadReports()
     }
@@ -34,12 +37,25 @@ class ReportViewModel : ViewModel() {
             onSuccess = { reports ->
                 _reports.value = reports
                 _isLoading.value = false
+                updateNotificationCount(reports)
             },
             onError = { errorMessage ->
                 _error.value = errorMessage
                 _isLoading.value = false
             }
         )
+    }
+
+    private fun updateNotificationCount(reports: List<Report>) {
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            // Real-time calculation based on report statuses
+            val count = reports.count { 
+                it.userId == currentUser.uid && 
+                (it.status == "In Progress" || it.status == "Resolved") 
+            }
+            _notificationCount.value = count
+        }
     }
 
     /**
@@ -95,7 +111,9 @@ class ReportViewModel : ViewModel() {
      */
     fun updateReportStatus(
         reportId: String,
-        newStatus: String
+        newStatus: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
     ) {
         repository.updateReportStatus(
             reportId = reportId,
@@ -108,9 +126,12 @@ class ReportViewModel : ViewModel() {
                         report
                     }
                 }
+                updateNotificationCount(_reports.value)
+                onSuccess()
             },
             onError = { errorMessage ->
                 _error.value = errorMessage
+                onError(errorMessage)
             }
         )
     }

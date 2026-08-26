@@ -2,6 +2,7 @@ package com.example.civilink.ui.screens.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,10 +58,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.civilink.data.User
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_SPLASH
+import com.example.civilink.navigation.ROUT_EDITPROFILE
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -206,18 +210,27 @@ fun ProfileScreen(navController: NavController) {
                                     .background(CivicWhite),
                                 contentAlignment = Alignment.Center
                             ) {
-                                val initials = userProfile?.fullName?.split(" ")
-                                    ?.filter { it.isNotEmpty() }
-                                    ?.take(2)
-                                    ?.map { it[0].uppercase() }
-                                    ?.joinToString("") ?: "?"
+                                if (userProfile?.profileImageUrl != null) {
+                                    AsyncImage(
+                                        model = userProfile?.profileImageUrl,
+                                        contentDescription = "Profile Photo",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    val initials = userProfile?.fullName?.split(" ")
+                                        ?.filter { it.isNotEmpty() }
+                                        ?.take(2)
+                                        ?.map { it[0].uppercase() }
+                                        ?.joinToString("") ?: "?"
 
-                                Text(
-                                    text = initials,
-                                    color = CivicBlue,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                    Text(
+                                        text = initials,
+                                        color = CivicBlue,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
 
                             Spacer(
@@ -354,7 +367,7 @@ fun ProfileScreen(navController: NavController) {
                         ProfileInfoRow(
                             icon = Icons.Default.LocationOn,
                             title = "Location",
-                            value = "Not set" // Could be dynamic if saved in profile
+                            value = if (userProfile?.location.isNullOrBlank()) "Not set" else userProfile!!.location
                         )
                     }
                 }
@@ -389,7 +402,7 @@ fun ProfileScreen(navController: NavController) {
                             title = "Edit profile",
                             subtitle = "Update your personal information",
                         ) {
-                            // Edit profile logic
+                            navController.navigate(ROUT_EDITPROFILE)
                         }
 
                         ProfileMenuItem(
@@ -397,16 +410,16 @@ fun ProfileScreen(navController: NavController) {
                             title = "Notifications",
                             subtitle = "Manage your notifications",
                         ) {
-                            // Notifications
+                            Toast.makeText(context, "Notifications feature coming soon", Toast.LENGTH_SHORT).show()
                         }
 
-                    ProfileMenuItem(
-                        icon = Icons.Default.Settings,
-                        title = "Settings",
-                        subtitle = "App preferences and security",
-                    ) {
-                        navController.navigate(ROUT_SETTINGSCREEN)
-                    }
+                        ProfileMenuItem(
+                            icon = Icons.Default.Settings,
+                            title = "Settings",
+                            subtitle = "App preferences and security",
+                        ) {
+                            navController.navigate(ROUT_SETTINGSCREEN)
+                        }
                 }
             }
 
@@ -581,6 +594,7 @@ fun ProfileMenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(
                 horizontal = 18.dp,
                 vertical = 15.dp
@@ -588,19 +602,23 @@ fun ProfileMenuItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        IconButton(
-            onClick = onClick
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(CivicLightBlue),
+            contentAlignment = Alignment.Center
         ) {
-
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = CivicBlue
+                tint = CivicBlue,
+                modifier = Modifier.size(20.dp)
             )
         }
 
         Spacer(
-            modifier = Modifier.width(8.dp)
+            modifier = Modifier.width(15.dp)
         )
 
         Column(
@@ -628,7 +646,8 @@ fun ProfileMenuItem(
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = CivicGray
+            tint = CivicGray.copy(alpha = 0.5f),
+            modifier = Modifier.size(18.dp)
         )
     }
 }

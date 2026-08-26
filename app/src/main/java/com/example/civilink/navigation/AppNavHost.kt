@@ -14,6 +14,8 @@ import com.example.civilink.ui.screens.homescreen.HomeScreen
 import com.example.civilink.ui.screens.login.LoginScreen
 import com.example.civilink.ui.screens.onboarding.Onboarding1Screen
 import com.example.civilink.ui.screens.onboarding.Onboarding2Screen
+import com.example.civilink.ui.screens.notifications.NotificationScreen
+import com.example.civilink.ui.screens.profile.EditProfileScreen
 import com.example.civilink.ui.screens.profile.ProfileScreen
 import com.example.civilink.ui.screens.register.RegisterScreen
 import com.example.civilink.ui.screens.reportdetail.ReportDetailScreen
@@ -86,6 +88,12 @@ fun AppNavHost(
         }
         composable(ROUT_ADMINDASHBOARD) {
             AdminDashboardScreen(navController)
+        }
+        composable(ROUT_EDITPROFILE) {
+            EditProfileScreen(navController)
+        }
+        composable(ROUT_NOTIFICATIONS) {
+            NotificationScreen(navController)
         }
     }
 }

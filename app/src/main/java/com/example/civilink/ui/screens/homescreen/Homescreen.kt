@@ -72,16 +72,20 @@ import androidx.navigation.compose.rememberNavController
 
 import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
+import com.example.civilink.data.User
+import com.google.firebase.database.FirebaseDatabase
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import com.example.civilink.navigation.ROUT_PROFILESCREEN
 import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_CREATEREPORT
+import com.example.civilink.navigation.ROUT_NOTIFICATIONS
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
+import com.example.civilink.ui.theme.CivicOrange
 import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
@@ -103,18 +107,36 @@ fun HomeScreen(
     }
 
     val currentUser = auth?.currentUser
+    var userName by remember { mutableStateOf("Citizen") }
+    var userProfilePhoto by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(currentUser?.uid) {
+        if (!isPreview && currentUser?.uid != null) {
+            FirebaseDatabase.getInstance().getReference("users")
+                .child(currentUser.uid).get()
+                .addOnSuccessListener { snapshot ->
+                    val user = snapshot.getValue(User::class.java)
+                    if (user != null) {
+                        userName = user.fullName.split(" ")[0]
+                        userProfilePhoto = user.profileImageUrl
+                    }
+                }
+        }
+    }
 
     // Get reports from ViewModel
     val reports by reportViewModel.reports.collectAsState()
     val isLoading by reportViewModel.isLoading.collectAsState()
-    val error by reportViewModel.error.collectAsState()
+    val notificationCount by reportViewModel.notificationCount.collectAsState()
 
     HomeScreenContent(
         navController = navController,
         reports = reports,
         isLoading = isLoading,
-        error = error,
         currentUserUid = currentUser?.uid,
+        userName = userName,
+        userProfilePhoto = userProfilePhoto,
+        notificationCount = notificationCount
     ) {
         if (!isPreview) {
             reportViewModel.loadReports()
@@ -127,8 +149,10 @@ fun HomeScreenContent(
     navController: NavController,
     reports: List<Report>,
     isLoading: Boolean,
-    error: String?,
     currentUserUid: String?,
+    userName: String = "Citizen",
+    userProfilePhoto: String? = null,
+    notificationCount: Int = 0,
     onLoadReports: () -> Unit = {}
 ) {
 
@@ -149,12 +173,9 @@ fun HomeScreenContent(
         onLoadReports()
     }
 
-    // Filter reports for current user
-    val myReports = reports.filter {
-        it.userId == currentUserUid
-    }
-
     // Report statistics
+    val myReports = reports.filter { it.userId == currentUserUid }
+    
     val pendingCount = myReports.count {
         it.status.equals("Pending", ignoreCase = true)
     }
@@ -166,9 +187,6 @@ fun HomeScreenContent(
     val resolvedCount = myReports.count {
         it.status.equals("Resolved", ignoreCase = true)
     }
-
-    // Dynamic notification count
-    val notificationCount = progressCount + resolvedCount
 
     // Search filtering
     val filteredReports = myReports.filter { report ->
@@ -246,6 +264,19 @@ fun HomeScreenContent(
                     )
                 )
             }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate(ROUT_CREATEREPORT)
+                },
+                containerColor = CivicTeal,
+                contentColor = CivicWhite,
+                shape = CircleShape,
+                modifier = Modifier.padding(bottom = 10.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Report", modifier = Modifier.size(32.dp))
+            }
         }
     ) { paddingValues ->
 
@@ -290,7 +321,7 @@ fun HomeScreenContent(
                         Column {
 
                             Text(
-                                text = "Good evening ",
+                                text = "Good evening, $userName",
                                 color = CivicWhite.copy(alpha = 0.75f),
                                 fontSize = 14.sp
                             )
@@ -300,7 +331,16 @@ fun HomeScreenContent(
                             )
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                AppLogo(size = 36.dp)
+                                if (userProfilePhoto != null) {
+                                    AsyncImage(
+                                        model = userProfilePhoto,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.size(36.dp).clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    AppLogo(size = 36.dp)
+                                }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = "CiviLink",
@@ -313,15 +353,17 @@ fun HomeScreenContent(
 
                     BadgedBox(
                         badge = {
-                            Badge {
-                                Text("3")
+                            if (notificationCount > 0) {
+                                Badge {
+                                    Text(notificationCount.toString())
+                                }
                             }
                         }
                     ) {
 
                         IconButton(
                             onClick = {
-                                // Notifications
+                                navController.navigate(ROUT_NOTIFICATIONS)
                             }
                         ) {
 
@@ -603,7 +645,7 @@ fun HomeScreenContent(
             if (isLoading) {
 
                 Text(
-                    text = "Loading reports...",
+                    text = "Syncing with community...",
                     color = CivicGray,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(vertical = 15.dp)
@@ -611,21 +653,10 @@ fun HomeScreenContent(
             }
 
 
-            // Error state
-            if (error != null) {
-                Text(
-                    text = "Error: $error",
-                    color = CivicGray,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 15.dp),
-                )
-            }
-
-
             // No reports
-            if (!isLoading && error == null && filteredReports.isEmpty()) {
+            if (!isLoading && filteredReports.isEmpty()) {
                 Text(
-                    text = "You haven't submitted any reports yet.",
+                    text = "No reports found.",
                     color = CivicGray,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(vertical = 15.dp),
@@ -837,6 +868,13 @@ fun RecentReportCard(
     onClick: () -> Unit = {}
 ) {
 
+    val statusColor = when {
+        status.equals("Pending", ignoreCase = true) -> CivicOrange
+        status.equals("In Progress", ignoreCase = true) -> CivicBlue
+        status.equals("Resolved", ignoreCase = true) -> CivicTeal
+        else -> CivicGray
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
@@ -905,7 +943,7 @@ fun RecentReportCard(
 
             Text(
                 text = status,
-                color = CivicTeal,
+                color = statusColor,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -928,8 +966,9 @@ fun HomeScreenPreview() {
             Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user", imageUrl = null)
         ),
         isLoading = false,
-        error = null,
-        currentUserUid = "test_user"
+        currentUserUid = "test_user",
+        userName = "Preview",
+        notificationCount = 1
     )
 }
 
