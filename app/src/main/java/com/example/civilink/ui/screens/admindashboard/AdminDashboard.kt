@@ -81,6 +81,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 
 
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+
 @Composable
 fun AdminDashboardScreen(
     navController: NavController,
@@ -481,7 +484,7 @@ fun AdminDashboardContent(
 
             // Real Firebase reports
 
-            reports.take(10).forEach { report ->
+            reports.forEach { report ->
 
                 AdminReportCard(
                     report = report,
@@ -527,28 +530,19 @@ fun AdminDashboardContent(
                 AdminActionItem(
                     icon = Icons.AutoMirrored.Filled.Assignment,
                     title = "Manage all reports",
-                    subtitle = "View and update citizen reports",
-                    onClick = {
-                        Toast.makeText(context, "Manage all reports coming soon", Toast.LENGTH_SHORT).show()
-                    }
+                    subtitle = "View and update citizen reports"
                 )
 
                 AdminActionItem(
                     icon = Icons.Default.People,
                     title = "Manage citizens",
-                    subtitle = "View registered citizens",
-                    onClick = {
-                        Toast.makeText(context, "Manage citizens coming soon", Toast.LENGTH_SHORT).show()
-                    }
+                    subtitle = "View registered citizens"
                 )
 
                 AdminActionItem(
                     icon = Icons.Default.LocationOn,
                     title = "View report locations",
-                    subtitle = "See where issues are being reported",
-                    onClick = {
-                        Toast.makeText(context, "View report locations coming soon", Toast.LENGTH_SHORT).show()
-                    }
+                    subtitle = "See where issues are being reported"
                 )
             }
 
@@ -700,40 +694,32 @@ fun AdminReportCard(
 
                 Box(
                     modifier = Modifier
-                        .size(45.dp)
-                        .clip(CircleShape)
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(CivicLightBlue),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    Icon(
-                        imageVector = when {
-                            report.category.contains(
-                                "Water",
-                                ignoreCase = true
-                            ) -> Icons.Default.WaterDrop
-
-                            report.category.contains(
-                                "Electricity",
-                                ignoreCase = true
-                            ) -> Icons.Default.ElectricBolt
-
-                            report.category.contains(
-                                "Road",
-                                ignoreCase = true
-                            ) -> Icons.Default.Build
-
-                            report.category.contains(
-                                "Waste",
-                                ignoreCase = true
-                            ) -> Icons.Default.Delete
-
-                            else -> Icons.Default.Report
-                        },
-                        contentDescription = null,
-                        tint = CivicBlue,
-                        modifier = Modifier.size(21.dp)
-                    )
+                    if (report.imageUrl != null) {
+                        AsyncImage(
+                            model = report.imageUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = when {
+                                report.category.contains("Water", ignoreCase = true) -> Icons.Default.WaterDrop
+                                report.category.contains("Electricity", ignoreCase = true) -> Icons.Default.ElectricBolt
+                                report.category.contains("Road", ignoreCase = true) -> Icons.Default.Build
+                                report.category.contains("Waste", ignoreCase = true) -> Icons.Default.Delete
+                                else -> Icons.Default.Report
+                            },
+                            contentDescription = null,
+                            tint = CivicBlue,
+                            modifier = Modifier.size(21.dp)
+                        )
+                    }
                 }
 
 
@@ -882,7 +868,6 @@ fun AdminActionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .padding(
                 horizontal = 18.dp,
                 vertical = 15.dp
@@ -957,7 +942,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Road",
                     location = "Main St, City Center",
                     description = "Large pothole causing traffic delays.",
-                    status = "Pending"
+                    status = "Pending",
+                    imageUrl = null
                 ),
                 Report(
                     id = "2",
@@ -965,7 +951,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Water",
                     location = "2nd Ave, North District",
                     description = "Water main burst near the park.",
-                    status = "In Progress"
+                    status = "In Progress",
+                    imageUrl = null
                 ),
                 Report(
                     id = "3",
@@ -973,7 +960,8 @@ fun AdminDashboardScreenPreview() {
                     category = "Electricity",
                     location = "Park Rd, South Side",
                     description = "The light at the corner is flickering.",
-                    status = "Resolved"
+                    status = "Resolved",
+                    imageUrl = null
                 )
             ),
             isLoading = false,

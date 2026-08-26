@@ -12,7 +12,7 @@ const val ROUT_PROFILESCREEN = "ProfileScreen"
 
 const val ROUT_REGISTER = "Register"
 
-const val ROUT_REPORTDETAIL = "ReportDetail"
+const val ROUT_REPORTDETAIL = "ReportDetail/{reportId}"
 
 const val ROUT_SETTINGSCREEN = "SettingScreen"
 

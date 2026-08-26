@@ -1,6 +1,8 @@
 package com.example.civilink.ui.screens.homescreen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,10 +72,11 @@ import androidx.navigation.compose.rememberNavController
 
 import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
-import com.example.civilink.navigation.ROUT_CREATEREPORT
-import com.example.civilink.navigation.ROUT_HOMESCREEN
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import com.example.civilink.navigation.ROUT_PROFILESCREEN
 import com.example.civilink.navigation.ROUT_SETTINGSCREEN
+import com.example.civilink.navigation.ROUT_CREATEREPORT
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
@@ -82,9 +86,10 @@ import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 
 
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun HomeScreen(
@@ -127,6 +132,7 @@ fun HomeScreenContent(
     onLoadReports: () -> Unit = {}
 ) {
 
+    val context = LocalContext.current
     var searchText by remember {
         mutableStateOf("")
     }
@@ -161,13 +167,17 @@ fun HomeScreenContent(
         it.status.equals("Resolved", ignoreCase = true)
     }
 
+    // Dynamic notification count
+    val notificationCount = progressCount + resolvedCount
+
     // Search filtering
     val filteredReports = myReports.filter { report ->
 
         searchText.isBlank() ||
                 report.title.contains(searchText, ignoreCase = true) ||
                 report.category.contains(searchText, ignoreCase = true) ||
-                report.location.contains(searchText, ignoreCase = true)
+                report.location.contains(searchText, ignoreCase = true) ||
+                report.status.contains(searchText, ignoreCase = true)
     }
 
 
@@ -193,7 +203,7 @@ fun HomeScreenContent(
 
                 NavigationBarItem(
                     selected = false,
-                    onClick = { 
+                    onClick = {
                         navController.navigate(ROUT_CREATEREPORT) {
                             launchSingleTop = true
                         }
@@ -208,7 +218,7 @@ fun HomeScreenContent(
 
                 NavigationBarItem(
                     selected = false,
-                    onClick = { 
+                    onClick = {
                         navController.navigate(ROUT_PROFILESCREEN) {
                             launchSingleTop = true
                         }
@@ -223,7 +233,7 @@ fun HomeScreenContent(
 
                 NavigationBarItem(
                     selected = false,
-                    onClick = { 
+                    onClick = {
                         navController.navigate(ROUT_SETTINGSCREEN) {
                             launchSingleTop = true
                         }
@@ -301,80 +311,62 @@ fun HomeScreenContent(
                             }
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            BadgedBox(
-                                badge = {
-                                    Badge {
-                                        Text("3")
-                                    }
-                                }
-                            ) {
-
-                                IconButton(
-                                    onClick = {
-                                        // Notifications
-                                    }
-                                ) {
-
-                                    Icon(
-                                        imageVector = Icons.Default.Notifications,
-                                        contentDescription = "Notifications",
-                                        tint = CivicWhite
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            IconButton(
-                                onClick = {
-                                    navController.navigate(ROUT_PROFILESCREEN) {
-                                        launchSingleTop = true
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = CivicWhite
-                                )
+                    BadgedBox(
+                        badge = {
+                            Badge {
+                                Text("3")
                             }
                         }
+                    ) {
+
+                        IconButton(
+                            onClick = {
+                                // Notifications
+                            }
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = CivicWhite
+                            )
+                        }
                     }
+                }
 
                     Spacer(
                         modifier = Modifier.height(20.dp)
                     )
 
-                    // Search
-                    OutlinedTextField(
-                        value = searchText,
-                        onValueChange = {
-                            searchText = it
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = {
-                            Text(
-                                text = "Search community issues..."
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search"
-                            )
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = CivicWhite,
-                            unfocusedContainerColor = CivicWhite,
-                            focusedBorderColor = CivicTeal,
-                            unfocusedBorderColor = CivicWhite.copy(alpha = 0.5f)
+                // Search
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = {
+                        searchText = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = {
+                        Text(
+                            text = "Search community issues..."
                         )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search"
+                        )
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = CivicWhite,
+                        unfocusedContainerColor = CivicWhite,
+                        focusedBorderColor = CivicTeal,
+                        unfocusedBorderColor = CivicWhite.copy(alpha = 0.5f)
                     )
-                }
+                )
             }
+        }
 
 
             // ─────────────────────────────
@@ -505,7 +497,10 @@ fun HomeScreenContent(
 
                     CategoryCard(
                         name = category.first,
-                        icon = category.second
+                        icon = category.second,
+                        onClick = {
+                            searchText = category.first
+                        }
                     )
                 }
             }
@@ -539,19 +534,28 @@ fun HomeScreenContent(
                 ReportStatusCard(
                     number = pendingCount.toString(),
                     label = "Pending",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "Pending"
+                    }
                 )
 
                 ReportStatusCard(
                     number = progressCount.toString(),
                     label = "In Progress",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "In Progress"
+                    }
                 )
 
                 ReportStatusCard(
                     number = resolvedCount.toString(),
                     label = "Resolved",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        searchText = "Resolved"
+                    }
                 )
             }
 
@@ -580,6 +584,10 @@ fun HomeScreenContent(
 
                 Text(
                     text = "View all",
+                    modifier = Modifier.clickable {
+                        searchText = ""
+                        Toast.makeText(context, "Showing all reports", Toast.LENGTH_SHORT).show()
+                    },
                     color = CivicBlue,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
@@ -636,6 +644,10 @@ fun HomeScreenContent(
                     title = report.title,
                     category = report.category,
                     status = report.status,
+                    imageUrl = report.imageUrl,
+                    onClick = {
+                        navController.navigate("ReportDetail/${report.id}")
+                    }
                 )
             }
 
@@ -713,13 +725,14 @@ fun HomeScreenContent(
 fun CategoryCard(
     name: String,
     icon: ImageVector,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
         modifier = Modifier.size(
             width = 100.dp,
             height = 105.dp
-        ),
+        ).clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -772,10 +785,11 @@ fun ReportStatusCard(
     number: String,
     label: String,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = modifier,
+        modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -819,10 +833,12 @@ fun RecentReportCard(
     title: String,
     category: String,
     status: String,
+    imageUrl: String? = null,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -843,12 +859,20 @@ fun RecentReportCard(
                     .background(CivicLightBlue),
                 contentAlignment = Alignment.Center
             ) {
-
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = null,
-                    tint = CivicBlue
-                )
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = null,
+                        tint = CivicBlue
+                    )
+                }
             }
 
             Spacer(
@@ -900,8 +924,8 @@ fun HomeScreenPreview() {
     HomeScreenContent(
         navController = rememberNavController(),
         reports = listOf(
-            Report(id = "1", title = "Pothole", category = "Roads", status = "Pending", userId = "test_user"),
-            Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user")
+            Report(id = "1", title = "Pothole", category = "Roads", status = "Pending", userId = "test_user", imageUrl = null),
+            Report(id = "2", title = "Broken Pipe", category = "Water", status = "In Progress", userId = "test_user", imageUrl = null)
         ),
         isLoading = false,
         error = null,

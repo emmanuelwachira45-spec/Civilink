@@ -8,5 +8,6 @@ data class Report(
     val location: String = "",
     val description: String = "",
     val status: String = "Pending",
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    val imageUrl: String? = null
 )

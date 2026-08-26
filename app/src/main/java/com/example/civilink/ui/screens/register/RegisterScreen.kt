@@ -473,8 +473,10 @@ fun RegisterScreen(navController: NavController) {
                                                     .setValue(userData)
                                                     .addOnCompleteListener { databaseTask ->
 
+                                                        isLoading = false
+
                                                         if (databaseTask.isSuccessful) {
-                                                            
+
                                                             // If admin, also save to admins node
                                                             if (role == "admin") {
                                                                 database.getReference("admins")
@@ -507,7 +509,7 @@ fun RegisterScreen(navController: NavController) {
                                                             isLoading = false
                                                             Toast.makeText(
                                                                 context,
-                                                                "Account created, but profile could not be saved.",
+                                                                "Profile error: ${databaseTask.exception?.message}",
                                                                 Toast.LENGTH_LONG
                                                             ).show()
                                                         }
