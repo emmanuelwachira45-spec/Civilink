@@ -22,6 +22,8 @@ class ReportViewModel : ViewModel() {
     private val _notificationCount = MutableStateFlow(0)
     val notificationCount: StateFlow<Int> = _notificationCount.asStateFlow()
 
+    private var isListening = false
+
     init {
         loadReports()
     }
@@ -30,6 +32,9 @@ class ReportViewModel : ViewModel() {
      * Loads reports from the repository.
      */
     fun loadReports() {
+        if (isListening) return
+        isListening = true
+
         _isLoading.value = true
         _error.value = null
 
@@ -42,6 +47,7 @@ class ReportViewModel : ViewModel() {
             onError = { errorMessage ->
                 _error.value = errorMessage
                 _isLoading.value = false
+                isListening = false // Allow retry on error
             }
         )
     }
@@ -49,11 +55,10 @@ class ReportViewModel : ViewModel() {
     private fun updateNotificationCount(reports: List<Report>) {
         val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            // Real-time calculation based on report statuses
-            val count = reports.count { 
-                it.userId == currentUser.uid && 
-                (it.status == "In Progress" || it.status == "Resolved") 
-            }
+            // Every report a citizen has filed appears in their
+            // notification feed (including freshly submitted ones),
+            // so the badge mirrors the full feed.
+            val count = reports.count { it.userId == currentUser.uid }
             _notificationCount.value = count
         }
     }
@@ -121,7 +126,62 @@ class ReportViewModel : ViewModel() {
             onSuccess = {
                 _reports.value = _reports.value.map { report ->
                     if (report.id == reportId) {
-                        report.copy(status = newStatus)
+                        report.copy(
+                            status = newStatus,
+                            lastUpdatedAt = System.currentTimeMillis()
+                        )
+                    } else {
+                        report
+                    }
+                }
+                updateNotificationCount(_reports.value)
+                onSuccess()
+            },
+            onError = { errorMessage ->
+                _error.value = errorMessage
+                onError(errorMessage)
+            }
+        )
+    }
+
+    /**
+     * Edits an existing report's content (and optionally its status).
+     * Powers the admin edit dialog – writes through to Firebase and
+     * keeps every in-memory copy across screens in sync.
+     */
+    fun updateReport(
+        reportId: String,
+        title: String,
+        category: String,
+        location: String,
+        description: String,
+        status: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val updatedStamp = System.currentTimeMillis()
+
+        repository.updateReport(
+            reportId = reportId,
+            updates = mapOf(
+                "title" to title.trim(),
+                "category" to category,
+                "location" to location.trim(),
+                "description" to description.trim(),
+                "status" to status,
+                "lastUpdatedAt" to updatedStamp
+            ),
+            onSuccess = {
+                _reports.value = _reports.value.map { report ->
+                    if (report.id == reportId) {
+                        report.copy(
+                            title = title.trim(),
+                            category = category,
+                            location = location.trim(),
+                            description = description.trim(),
+                            status = status,
+                            lastUpdatedAt = updatedStamp
+                        )
                     } else {
                         report
                     }

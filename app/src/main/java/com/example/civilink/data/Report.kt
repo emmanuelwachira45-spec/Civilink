@@ -9,5 +9,8 @@ data class Report(
     val description: String = "",
     val status: String = "Pending",
     val timestamp: Long = 0L,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    // Set whenever the report is created, edited or has its status
+    // changed – lets notifications order by "latest activity".
+    val lastUpdatedAt: Long = 0L
 )

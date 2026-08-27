@@ -191,12 +191,20 @@ fun HomeScreenContent(
         "Electricity" to Icons.Default.ElectricBolt,
     )
 
-    // Load reports
-    LaunchedEffect(Unit) {
-        onLoadReports()
+    // Real-time notification when a new report is added to the community
+    // Initialized to -1 to distinguish between "not yet loaded" and "empty"
+    var lastReportCount by remember { mutableStateOf(-1) }
+    
+    LaunchedEffect(reports.size) {
+        // If we previously had reports (count > 0) and the new count is higher, show toast
+        if (lastReportCount > 0 && reports.size > lastReportCount) {
+            Toast.makeText(context, "New civic issue reported nearby!", Toast.LENGTH_SHORT).show()
+        }
+        // Update tracking count
+        lastReportCount = reports.size
     }
 
-    // Report statistics
+    // Report statistics (still specific to the logged-in user)
     val myReports = reports.filter { it.userId == currentUserUid }
     
     val pendingCount = myReports.count {
@@ -211,8 +219,8 @@ fun HomeScreenContent(
         it.status.equals("Resolved", ignoreCase = true)
     }
 
-    // Search filtering
-    val filteredReports = myReports.filter { report ->
+    // Search filtering (now shows ALL community reports for a connected experience)
+    val filteredReports = reports.filter { report ->
 
         searchText.isBlank() ||
                 report.title.contains(searchText, ignoreCase = true) ||

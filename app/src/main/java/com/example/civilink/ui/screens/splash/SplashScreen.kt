@@ -65,30 +65,45 @@ fun SplashScreen(navController: NavController) {
 
         delay(2500)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
 
         if (currentUser == null) {
+            // User is NOT logged in: Splash -> Onboarding -> Login
             navController.navigate(ROUT_ONBOARDING1) {
                 popUpTo(ROUT_SPLASH) { inclusive = true }
             }
         } else {
-            // Check if admin
-            FirebaseDatabase.getInstance().getReference("admins")
-                .child(currentUser.uid)
-                .get()
+            // User IS logged in: Splash -> Skip Login -> Dashboard/Home
+            val uid = currentUser.uid
+            val database = FirebaseDatabase.getInstance()
+            
+            // Check user role to decide destination
+            database.getReference("users").child(uid).get()
                 .addOnSuccessListener { snapshot ->
-                    if (snapshot.exists()) {
-                        navController.navigate(ROUT_ADMINDASHBOARD) {
-                            popUpTo(ROUT_SPLASH) { inclusive = true }
+                    val role = snapshot.child("role").getValue(String::class.java)?.lowercase()
+                    val email = snapshot.child("email").getValue(String::class.java)?.lowercase()
+                    
+                    // Check admins node as well for redundancy
+                    database.getReference("admins").child(uid).get()
+                        .addOnSuccessListener { adminSnapshot ->
+                            val isAdmin = adminSnapshot.exists() || role == "admin" || email == "admin@civilink.com"
+                            
+                            val destination = if (isAdmin) ROUT_ADMINDASHBOARD else ROUT_HOMESCREEN
+                            navController.navigate(destination) {
+                                popUpTo(ROUT_SPLASH) { inclusive = true }
+                            }
                         }
-                    } else {
-                        navController.navigate(ROUT_HOMESCREEN) {
-                            popUpTo(ROUT_SPLASH) { inclusive = true }
+                        .addOnFailureListener {
+                            // Fallback if admin check fails
+                            val destination = if (role == "admin") ROUT_ADMINDASHBOARD else ROUT_HOMESCREEN
+                            navController.navigate(destination) {
+                                popUpTo(ROUT_SPLASH) { inclusive = true }
+                            }
                         }
-                    }
                 }
                 .addOnFailureListener {
-                    // Fallback to home if check fails
+                    // Critical failure (e.g. no internet): Fallback to Home if we are already logged in
                     navController.navigate(ROUT_HOMESCREEN) {
                         popUpTo(ROUT_SPLASH) { inclusive = true }
                     }

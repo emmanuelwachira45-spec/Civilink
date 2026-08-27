@@ -43,6 +43,8 @@ class ReportRepository {
         onSuccess: (List<Report>) -> Unit,
         onError: (String) -> Unit
     ) {
+        // Real-time synchronization – the listener stays active so
+        // screens update immediately when the community reports new issues.
         reportsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val reportsList = mutableListOf<Report>()
@@ -51,7 +53,6 @@ class ReportRepository {
                     try {
                         val report = reportSnapshot.getValue(Report::class.java)
                         if (report != null) {
-                            // Ensure ID matches the Firebase key
                             val id = reportSnapshot.key ?: ""
                             reportsList.add(report.copy(id = id))
                         }
@@ -60,7 +61,6 @@ class ReportRepository {
                     }
                 }
                 
-                // Sort by timestamp descending
                 reportsList.sortByDescending { it.timestamp }
                 onSuccess(reportsList)
             }
@@ -87,9 +87,8 @@ class ReportRepository {
             return
         }
 
-        val reportWithId = report.copy(id = reportKey)
+        val reportWithId = report.copy(id = reportKey, lastUpdatedAt = System.currentTimeMillis())
 
-        // Convert to Map to bypass analyzer/resolution issues with data classes
         val reportMap = mapOf<String, Any?>(
             "id" to reportWithId.id,
             "userId" to reportWithId.userId,
@@ -99,7 +98,8 @@ class ReportRepository {
             "description" to reportWithId.description,
             "status" to reportWithId.status,
             "timestamp" to reportWithId.timestamp,
-            "imageUrl" to reportWithId.imageUrl
+            "imageUrl" to reportWithId.imageUrl,
+            "lastUpdatedAt" to reportWithId.lastUpdatedAt
         )
 
         pushRef.setValue(reportMap)
@@ -126,7 +126,40 @@ class ReportRepository {
             return
         }
 
-        reportsRef.child(reportId).child("status").setValue(newStatus as Any)
+        // Status changes are timestamped so notifications can order
+        // by latest activity, and so admins can freely move a report
+        // back and forth between statuses.
+        reportsRef.child(reportId).updateChildren(
+            mapOf<String, Any>(
+                "status" to newStatus,
+                "lastUpdatedAt" to System.currentTimeMillis()
+            )
+        )
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                val message = exception.message?.toString() ?: "Update failed"
+                onError(message)
+            }
+    }
+
+    /**
+     * Edits the content (and optionally the status) of an existing
+     * report in a single atomic write. Used by the admin edit dialog.
+     */
+    fun updateReport(
+        reportId: String,
+        updates: Map<String, Any?>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (reportId.isEmpty()) {
+            onError("Invalid ID")
+            return
+        }
+
+        reportsRef.child(reportId).updateChildren(updates)
             .addOnSuccessListener {
                 onSuccess()
             }

@@ -19,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Pending
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -47,6 +50,8 @@ import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
+import com.example.civilink.ui.theme.CivicOrange
+import com.example.civilink.ui.theme.StatusGreen
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.example.civilink.ui.theme.DeepNavy
@@ -54,12 +59,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.ui.graphics.Brush
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class Notification(
     val title: String,
     val message: String,
     val time: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val accent: Color = CivicBlue
 )
 
 @Composable
@@ -75,14 +84,27 @@ fun NotificationScreen(
         null
     }
 
+    // Every report the citizen has filed appears here – including
+    // freshly submitted (Pending) ones – ordered by latest activity.
     val notifications = reports
-        .filter { it.userId == currentUser?.uid && (it.status == "In Progress" || it.status == "Resolved") }
+        .filter { it.userId == currentUser?.uid }
+        .sortedByDescending { maxOf(it.lastUpdatedAt, it.timestamp) }
         .map { report ->
+            val activityTime = maxOf(report.lastUpdatedAt, report.timestamp)
             Notification(
-                title = "Report Updated: ${report.status}",
-                message = "Your report '${report.title}' status has changed to ${report.status}.",
-                time = "Just now",
-                icon = if (report.status == "Resolved") Icons.Default.Info else Icons.Default.Notifications
+                title = when {
+                    report.status.equals("Pending", ignoreCase = true) -> "Report received"
+                    report.status.equals("In Progress", ignoreCase = true) -> "Crews are on it"
+                    else -> "Issue resolved"
+                },
+                message = "'${report.title}' — ${statusSentence(report.status)}",
+                time = relativeTime(activityTime),
+                icon = when {
+                    report.status.equals("Pending", ignoreCase = true) -> Icons.Default.Pending
+                    report.status.equals("In Progress", ignoreCase = true) -> Icons.Default.Engineering
+                    else -> Icons.Default.TaskAlt
+                },
+                accent = statusAccent(report.status)
             )
         }
 
@@ -185,12 +207,43 @@ fun EmptyNotifications() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Progress updates on your reports will land here.",
+            text = "Every report you file appears here with live status updates.",
             color = CivicGray,
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
             lineHeight = 19.sp
         )
+    }
+}
+
+// ─────────────────────────────────────────────
+// Notification helpers
+// ─────────────────────────────────────────────
+
+private fun statusAccent(status: String): Color = when {
+    status.equals("Pending", ignoreCase = true) -> CivicOrange
+    status.equals("In Progress", ignoreCase = true) -> CivicBlue
+    status.equals("Resolved", ignoreCase = true) -> StatusGreen
+    else -> CivicGray
+}
+
+private fun statusSentence(status: String): String = when {
+    status.equals("Pending", ignoreCase = true) -> "received and awaiting review"
+    status.equals("In Progress", ignoreCase = true) -> "currently being handled by field crews"
+    status.equals("Resolved", ignoreCase = true) -> "has been fully resolved. Thank you!"
+    else -> "status is being updated"
+}
+
+private fun relativeTime(millis: Long): String {
+    if (millis <= 0L) return "—"
+    val diff = System.currentTimeMillis() - millis
+    val minutes = diff / 60000
+    return when {
+        minutes < 1 -> "Just now"
+        minutes < 60 -> "${minutes}m ago"
+        minutes < 1440 -> "${minutes / 60}h ago"
+        minutes < 10080 -> "${minutes / 1440}d ago"
+        else -> SimpleDateFormat("dd MMM", Locale.getDefault()).format(Date(millis))
     }
 }
 
@@ -210,13 +263,13 @@ fun NotificationItem(notification: Notification) {
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(CivicLightBlue),
+                    .background(notification.accent.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = notification.icon,
                     contentDescription = null,
-                    tint = CivicBlue,
+                    tint = notification.accent,
                     modifier = Modifier.size(20.dp)
                 )
             }

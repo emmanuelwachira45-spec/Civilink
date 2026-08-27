@@ -62,6 +62,7 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.example.civilink.data.User
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
+import com.example.civilink.navigation.ROUT_ONBOARDING1
 import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.navigation.ROUT_EDITPROFILE
@@ -470,8 +471,8 @@ fun ProfileScreen(navController: NavController) {
             FilledTonalButton(
                 onClick = {
                     FirebaseAuth.getInstance().signOut()
-                    navController.navigate(ROUT_LOGINSCREEN) {
-                        popUpTo(ROUT_SPLASH) {
+                    navController.navigate(ROUT_ONBOARDING1) {
+                        popUpTo(0) {
                             inclusive = true
                         }
                     }
