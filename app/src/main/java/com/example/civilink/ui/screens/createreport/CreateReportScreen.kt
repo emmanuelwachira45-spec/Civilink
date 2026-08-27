@@ -69,6 +69,7 @@ import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
+import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -190,7 +191,7 @@ fun CreateReportContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
         // Top Bar
         Row(
@@ -224,6 +225,53 @@ fun CreateReportContent(
                 .verticalScroll(rememberScrollState())
                 .padding(18.dp)
         ) {
+
+            // Friendly guidance banner – makes the form feel welcoming
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = CivicNavy)
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(CivicWhite.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            tint = CivicWhite,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "Snap it clear",
+                            color = CivicWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "A sharp photo & precise spot get issues fixed faster.",
+                            color = CivicWhite.copy(alpha = 0.75f),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),

@@ -66,6 +66,10 @@ import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.example.civilink.ui.components.AppImages
+import com.example.civilink.ui.components.PhotoImage
+import com.example.civilink.ui.theme.DeepNavy
+import androidx.compose.ui.draw.alpha
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -101,12 +105,21 @@ fun RegisterScreen(navController: NavController) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
+                        DeepNavy,
                         CivicNavy,
                         CivicBlue
                     )
                 )
             )
     ) {
+
+        // Subtle city-texture backdrop behind the sign-up form
+        PhotoImage(
+            url = AppImages.LOGIN_HERO,
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.16f)
+        )
 
         Column(
             modifier = Modifier

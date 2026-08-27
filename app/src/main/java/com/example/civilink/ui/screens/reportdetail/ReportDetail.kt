@@ -21,9 +21,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +65,8 @@ import com.example.civilink.ui.theme.CivicOrange
 import com.example.civilink.ui.theme.CivicTeal
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
+import com.example.civilink.ui.theme.StatusGreen
+import com.example.civilink.ui.theme.civiPageBg
 import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,7 +93,7 @@ fun ReportDetailScreen(navController: NavController, reportId: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
 
         // Top Bar
@@ -253,6 +258,41 @@ fun ReportDetailScreen(navController: NavController, reportId: String) {
 
                 Spacer(modifier = Modifier.height(18.dp))
 
+                // Progress timeline – three friendly milestones
+                val stage = when(currentReport.status) {
+                    "Resolved" -> 2
+                    "In Progress" -> 1
+                    else -> 0
+                }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = CivicWhite)
+                ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Text(
+                            text = "Progress timeline",
+                            color = CivicText,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            ReportStepItem(Icons.Default.Inbox, "Received", stepAccent(0), stage >= 0)
+                            ReportStepItem(Icons.Default.Engineering, "In repair", stepAccent(1), stage >= 1)
+                            ReportStepItem(Icons.Default.TaskAlt, "Fixed", stepAccent(2), stage >= 2)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
                 ReportSectionTitle(title = "Description")
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
@@ -324,6 +364,44 @@ fun ReportInfoRow(icon: ImageVector, title: String, value: String) {
             Spacer(modifier = Modifier.height(2.dp))
             Text(text = value, color = CivicText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
         }
+    }
+}
+
+/**
+ * Accent colour for each milestone of a report's journey.
+ */
+fun stepAccent(step: Int): Color = when(step) {
+    0 -> CivicOrange
+    1 -> CivicBlue
+    else -> StatusGreen
+}
+
+@Composable
+fun ReportStepItem(icon: ImageVector, label: String, accent: Color, reached: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (reached) accent else CivicLightBlue),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (reached) CivicWhite else CivicGray,
+                modifier = Modifier.size(19.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = label,
+            color = if (reached) CivicText else CivicGray,
+            fontSize = 10.sp,
+            fontWeight = if (reached) FontWeight.SemiBold else FontWeight.Normal
+        )
     }
 }
 

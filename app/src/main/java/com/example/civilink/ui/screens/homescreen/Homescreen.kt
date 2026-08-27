@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -36,6 +37,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -81,6 +83,8 @@ import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_CREATEREPORT
 import com.example.civilink.navigation.ROUT_NOTIFICATIONS
 import com.example.civilink.ui.components.AppLogo
+import com.example.civilink.ui.theme.civiPageBg
+import com.example.civilink.ui.theme.civiNavBar
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
@@ -94,6 +98,15 @@ import com.google.firebase.auth.FirebaseAuth
 
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
+import com.example.civilink.ui.components.AnimatedCounter
+import com.example.civilink.ui.components.AppImages
+import com.example.civilink.ui.components.PhotoImage
+import com.example.civilink.ui.components.ShimmerReportCard
+import com.example.civilink.ui.components.bounceClick
+import com.example.civilink.ui.theme.BrightBlue
+import com.example.civilink.ui.theme.DeepNavy
+import com.example.civilink.ui.theme.StatusGreen
+import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun HomeScreen(
@@ -161,6 +174,16 @@ fun HomeScreenContent(
         mutableStateOf("")
     }
 
+    // Time-aware greeting – makes the home screen feel alive
+    val greeting = remember {
+        when (java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) {
+            in 5..11 -> "Good morning"
+            in 12..16 -> "Good afternoon"
+            in 17..20 -> "Good evening"
+            else -> "Still up"
+        }
+    }
+
     val categories = listOf(
         "Roads" to Icons.Default.Build,
         "Water" to Icons.Default.WaterDrop,
@@ -202,7 +225,7 @@ fun HomeScreenContent(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = CivicWhite,
+                containerColor = civiNavBar(),
                 tonalElevation = 8.dp
             ) {
                 NavigationBarItem(
@@ -284,7 +307,7 @@ fun HomeScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(CivicLightBlue)
+                .background(civiPageBg())
         ) {
 
             // ─────────────────────────────
@@ -321,7 +344,7 @@ fun HomeScreenContent(
                         Column {
 
                             Text(
-                                text = "Good evening, $userName",
+                                text = "$greeting, $userName",
                                 color = CivicWhite.copy(alpha = 0.75f),
                                 fontSize = 14.sp
                             )
@@ -399,6 +422,29 @@ fun HomeScreenContent(
                             contentDescription = "Search"
                         )
                     },
+                    trailingIcon = {
+                        // Manual community sync – spins while refreshing
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(end = 12.dp)
+                                    .size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = CivicGray
+                            )
+                        } else {
+                            IconButton(
+                                onClick = onLoadReports,
+                                modifier = Modifier.padding(end = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh reports",
+                                    tint = CivicGray
+                                )
+                            }
+                        }
+                    },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = CivicWhite,
@@ -432,17 +478,44 @@ fun HomeScreenContent(
             // ─────────────────────────────
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .bounceClick(pressedScale = 0.97f) {
+                        navController.navigate(ROUT_CREATEREPORT)
+                    },
                 shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = CivicBlue
-                ),
                 elevation = CardDefaults.cardElevation(
-                    defaultElevation = 4.dp
+                    defaultElevation = 6.dp
                 )
             ) {
 
-                Row(
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    // Cityscape backdrop – tap anywhere to report an issue
+                    PhotoImage(
+                        url = AppImages.HOME_BANNER,
+                        modifier = Modifier.matchParentSize(),
+                        fallbackIcon = Icons.Default.Add,
+                        fallbackIconSize = 40.dp
+                    )
+
+                    // Navy scrim so white overlay text stays crisp
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        DeepNavy.copy(alpha = 0.93f),
+                                        BrightBlue.copy(alpha = 0.55f)
+                                    )
+                                )
+                            )
+                    )
+
+                    Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
@@ -507,6 +580,7 @@ fun HomeScreenContent(
                             contentDescription = "Report Issue"
                         )
                     }
+                }
                 }
             }
 
@@ -574,7 +648,7 @@ fun HomeScreenContent(
             ) {
 
                 ReportStatusCard(
-                    number = pendingCount.toString(),
+                    number = pendingCount,
                     label = "Pending",
                     modifier = Modifier.weight(1f),
                     onClick = {
@@ -583,7 +657,7 @@ fun HomeScreenContent(
                 )
 
                 ReportStatusCard(
-                    number = progressCount.toString(),
+                    number = progressCount,
                     label = "In Progress",
                     modifier = Modifier.weight(1f),
                     onClick = {
@@ -592,7 +666,7 @@ fun HomeScreenContent(
                 )
 
                 ReportStatusCard(
-                    number = resolvedCount.toString(),
+                    number = resolvedCount,
                     label = "Resolved",
                     modifier = Modifier.weight(1f),
                     onClick = {
@@ -605,6 +679,65 @@ fun HomeScreenContent(
             Spacer(
                 modifier = Modifier.height(25.dp)
             )
+
+
+            // ─────────────────────────────
+            // Community Milestone Card
+            // ─────────────────────────────
+
+            val totalResolved = reports.count { it.status.equals("Resolved", ignoreCase = true) }
+            
+            if (totalResolved > 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = CivicWhite),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(CivicTeal.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Campaign,
+                                contentDescription = null,
+                                tint = CivicTeal,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Community Impact",
+                                color = CivicText,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "$totalResolved issues resolved in your city!",
+                                color = CivicGray,
+                                fontSize = 11.sp
+                            )
+                        }
+                        
+                        Text(
+                            text = "🎊",
+                            fontSize = 20.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
 
             // ─────────────────────────────
@@ -643,24 +776,34 @@ fun HomeScreenContent(
 
             // Loading state
             if (isLoading) {
-
-                Text(
-                    text = "Syncing with community...",
-                    color = CivicGray,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 15.dp)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    repeat(3) { ShimmerReportCard() }
+                }
             }
 
 
             // No reports
             if (!isLoading && filteredReports.isEmpty()) {
-                Text(
-                    text = "No reports found.",
-                    color = CivicGray,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(vertical = 15.dp),
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Campaign,
+                        contentDescription = null,
+                        tint = CivicGray.copy(alpha = 0.5f),
+                        modifier = Modifier.size(60.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (searchText.isEmpty()) "Your community is clear! No issues reported." else "No reports match your search.",
+                        color = CivicGray,
+                        fontSize = 14.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
 
 
@@ -763,7 +906,7 @@ fun CategoryCard(
         modifier = Modifier.size(
             width = 100.dp,
             height = 105.dp
-        ).clickable { onClick() },
+        ).bounceClick(pressedScale = 0.90f) { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -813,14 +956,14 @@ fun CategoryCard(
 
 @Composable
 fun ReportStatusCard(
-    number: String,
+    number: Int,
     label: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = modifier.clickable { onClick() },
+        modifier = modifier.bounceClick { onClick() },
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -834,11 +977,10 @@ fun ReportStatusCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text(
-                text = number,
-                color = CivicBlue,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
+            AnimatedCounter(
+                value = number,
+                style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold),
+                color = CivicBlue
             )
 
             Spacer(
@@ -871,12 +1013,12 @@ fun RecentReportCard(
     val statusColor = when {
         status.equals("Pending", ignoreCase = true) -> CivicOrange
         status.equals("In Progress", ignoreCase = true) -> CivicBlue
-        status.equals("Resolved", ignoreCase = true) -> CivicTeal
+        status.equals("Resolved", ignoreCase = true) -> StatusGreen
         else -> CivicGray
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().bounceClick { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = CivicWhite
@@ -941,12 +1083,18 @@ fun RecentReportCard(
                 )
             }
 
-            Text(
-                text = status,
-                color = statusColor,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Box(
+                modifier = Modifier
+                    .background(statusColor.copy(alpha = 0.14f), RoundedCornerShape(50))
+                    .padding(horizontal = 9.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = status,
+                    color = statusColor,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

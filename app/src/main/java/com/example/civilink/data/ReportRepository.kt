@@ -135,4 +135,17 @@ class ReportRepository {
                 onError(message)
             }
     }
+
+    /**
+     * Deletes a report from Firebase.
+     */
+    fun deleteReport(
+        reportId: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        reportsRef.child(reportId).removeValue()
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onError(it.message ?: "Deletion failed") }
+    }
 }

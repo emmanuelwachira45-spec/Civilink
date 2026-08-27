@@ -137,6 +137,31 @@ class ReportViewModel : ViewModel() {
     }
 
     /**
+     * Deletes a report.
+     */
+    fun deleteReport(
+        reportId: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        _isLoading.value = true
+        repository.deleteReport(
+            reportId = reportId,
+            onSuccess = {
+                _isLoading.value = false
+                _reports.value = _reports.value.filter { it.id != reportId }
+                updateNotificationCount(_reports.value)
+                onSuccess()
+            },
+            onError = { err ->
+                _isLoading.value = false
+                _error.value = err
+                onError(err)
+            }
+        )
+    }
+
+    /**
      * Clears the current error message.
      */
     fun clearError() {

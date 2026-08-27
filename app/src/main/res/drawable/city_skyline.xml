@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CiviLink signature scene: dusk skyline over water – drawn once,
+     always visible beneath every remote photo slot. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="720"
+    android:viewportHeight="405">
+
+    <!-- Night gradient sky -->
+    <path
+        android:pathData="M0,0 L720,0 L720,260 L0,260 Z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="0"
+                android:endX="0" android:endY="260">
+                <item android:offset="0.0" android:color="#FF06192B"/>
+                <item android:offset="0.55" android:color="#FF0A2540"/>
+                <item android:offset="1.0" android:color="#FF1565C0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Moon -->
+    <path
+        android:pathData="M592,58 m-26,0 a26,26 0 1,1 52,0 a26,26 0 1,1 -52,0"
+        android:fillColor="#FFF4F9FE"/>
+
+    <!-- Stars -->
+    <path android:pathData="M120,46 m-3,0 a3,3 0 1,1 6,0 a3,3 0 1,1 -6,0" android:fillColor="#66FFFFFF"/>
+    <path android:pathData="M205,88 m-2.5,0 a2.5,2.5 0 1,1 5,0 a2.5,2.5 0 1,1 -5,0" android:fillColor="#59FFFFFF"/>
+    <path android:pathData="M338,34 m-3.5,0 a3.5,3.5 0 1,1 7,0 a3.5,3.5 0 1,1 -7,0" android:fillColor="#66FFFFFF"/>
+    <path android:pathData="M455,72 m-2.5,0 a2.5,2.5 0 1,1 5,0 a2.5,2.5 0 1,1 -5,0" android:fillColor="#4DFFFFFF"/>
+    <path android:pathData="M668,124 m-2.5,0 a2.5,2.5 0 1,1 5,0 a2.5,2.5 0 1,1 -5,0" android:fillColor="#59FFFFFF"/>
+
+    <!-- Far skyline silhouette -->
+    <path
+        android:pathData="M0,212 L56,212 L56,168 L96,168 L96,204 L150,204 L150,150 L196,150 L196,198 L246,198 L246,162 L296,162 L296,206 L352,206 L352,158 L400,158 L400,200 L452,200 L452,170 L508,170 L508,202 L560,202 L560,164 L610,164 L610,198 L664,198 L664,172 L720,172 L720,260 L0,260 Z"
+        android:fillColor="#FF10375C"/>
+
+    <!-- Near skyline with lit windows -->
+    <path
+        android:pathData="M0,258 L48,258 L48,196 L108,196 L108,258 L160,258 L160,178 L232,178 L232,258 L282,258 L282,208 L340,208 L340,258 L392,258 L392,188 L462,188 L462,258 L520,258 L520,214 L572,214 L572,258 L626,258 L626,196 L686,196 L686,258 L720,258 L720,300 L0,300 Z"
+        android:fillColor="#FF0A2540"/>
+
+    <!-- Glowing windows -->
+    <path android:pathData="M186,196 h14 v12 h-14 z M214,196 h14 v12 h-14 z M186,224 h14 v12 h-14 z M242,224 h14 v12 h-14 z M312,226 h14 v11 h-14 z M420,206 h14 v12 h-14 z M420,234 h14 v12 h-14 z M448,206 h14 v12 h-14 z M538,228 h13 v11 h-13 z M650,210 h13 v11 h-13 z M76,210 h12 v11 h-12 z"
+        android:fillColor="#FF4FC3F7"/>
+
+    <!-- Water -->
+    <path
+        android:pathData="M0,290 L720,290 L720,405 L0,405 Z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0" android:startY="290"
+                android:endX="0" android:endY="405">
+                <item android:offset="0.0" android:color="#FF0A2540"/>
+                <item android:offset="1.0" android:color="#FF06192B"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Reflection ripples -->
+    <path android:pathData="M96,308 h70 v6 h-70 z M228,330 h94 v6 h-94 z M408,310 h80 v6 h-80 z M556,344 h86 v6 h-86 z M156,366 h64 v6 h-64 z M472,368 h70 v6 h-70 z"
+        android:fillColor="#264FC3F7"/>
+</vector>

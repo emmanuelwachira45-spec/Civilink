@@ -1,5 +1,10 @@
 package com.example.civilink.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -33,6 +38,31 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
+        // Smooth choreographed motion between every screen
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it / 10 },
+                animationSpec = tween(durationMillis = 280)
+            ) + fadeIn(animationSpec = tween(durationMillis = 260))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it / 14 },
+                animationSpec = tween(durationMillis = 240)
+            ) + fadeOut(animationSpec = tween(durationMillis = 220))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it / 10 },
+                animationSpec = tween(durationMillis = 280)
+            ) + fadeIn(animationSpec = tween(durationMillis = 260))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it / 14 },
+                animationSpec = tween(durationMillis = 240)
+            ) + fadeOut(animationSpec = tween(durationMillis = 220))
+        }
     ) {
 
         // Splash Screen

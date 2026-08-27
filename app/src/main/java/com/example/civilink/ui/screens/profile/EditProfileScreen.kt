@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,6 +63,7 @@ import android.net.Uri
 import com.example.civilink.data.User
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
+import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -69,13 +71,15 @@ import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 
 @Composable
 fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
-    val database = FirebaseDatabase.getInstance()
-    val currentUser = auth.currentUser
+    val isPreview = LocalInspectionMode.current
+    val auth = remember { if (isPreview) null else FirebaseAuth.getInstance() }
+    val database = remember { if (isPreview) null else FirebaseDatabase.getInstance() }
+    val currentUser = auth?.currentUser
 
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -93,7 +97,7 @@ fun EditProfileScreen(navController: NavController) {
     }
 
     LaunchedEffect(currentUser?.uid) {
-        if (currentUser?.uid != null) {
+        if (currentUser?.uid != null && database != null) {
             database.getReference("users").child(currentUser.uid).get().addOnSuccessListener { snapshot ->
                 val user = snapshot.getValue(User::class.java)
                 if (user != null) {
@@ -108,13 +112,19 @@ fun EditProfileScreen(navController: NavController) {
                 isLoading = false
                 Toast.makeText(context, "Failed to load user info", Toast.LENGTH_SHORT).show()
             }
+        } else if (isPreview) {
+            fullName = "John Doe"
+            email = "johndoe@example.com"
+            phone = "+1 234 567 890"
+            location = "New York, USA"
+            isLoading = false
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
         // Top Bar
         Row(
@@ -280,7 +290,7 @@ fun EditProfileScreen(navController: NavController) {
                                     Toast.makeText(context, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
-                                if (currentUser?.uid != null) {
+                                if (currentUser?.uid != null && database != null) {
                                     isSaving = true
                                     
                                     val performUpdate = { imageUrl: String? ->
@@ -316,7 +326,7 @@ fun EditProfileScreen(navController: NavController) {
                                     }
 
                                     if (selectedImageUri != null) {
-                                        val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
+                                        val storageRef = FirebaseStorage.getInstance().reference
                                             .child("profiles/${currentUser.uid}.jpg")
                                         
                                         storageRef.putFile(selectedImageUri!!)
@@ -332,6 +342,8 @@ fun EditProfileScreen(navController: NavController) {
                                     } else {
                                         performUpdate(null)
                                     }
+                                } else if (isPreview) {
+                                    Toast.makeText(context, "Save is disabled in Preview", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier

@@ -57,6 +57,7 @@ import com.example.civilink.navigation.ROUT_EDITPROFILE
 import com.example.civilink.ui.components.AppLogo
 import android.widget.Toast
 import com.example.civilink.ui.theme.CivicBlue
+import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -77,6 +78,8 @@ fun SettingScreen(navController: NavController) {
     }
 
     var selectedLanguage by remember { mutableStateOf("English") }
+    // Captured once in composable context so dialogs can read it
+    val systemIsDark = androidx.compose.foundation.isSystemInDarkTheme()
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showAppearanceDialog by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -85,7 +88,7 @@ fun SettingScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
 
         // Top Bar
@@ -121,6 +124,42 @@ fun SettingScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(18.dp)
         ) {
+
+            // Welcoming personalisation banner
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = CivicNavy),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AppLogo(size = 44.dp)
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column {
+                        Text(
+                            text = "Make CiviLink yours",
+                            color = CivicWhite,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "Dark mode, alerts & language tuned to fit your flow.",
+                            color = CivicWhite.copy(alpha = 0.75f),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
             Text(text = "Manage your CiviLink experience", color = CivicGray, fontSize = 13.sp)
             Spacer(modifier = Modifier.height(22.dp))
 
@@ -158,12 +197,17 @@ fun SettingScreen(navController: NavController) {
                 SettingSwitchItem(
                     icon = Icons.Default.DarkMode,
                     title = "Dark mode",
-                    subtitle = "Use a darker appearance",
+                    subtitle = if (darkModeEnabled) "Night palette is active" else "Use a darker appearance",
                     checked = darkModeEnabled,
-                    onCheckedChange = {
-                        darkModeEnabled = it
-                        // Just for show as requested
-                        Toast.makeText(context, "Appearance will change to ${if(it) "Dark" else "Light"} mode", Toast.LENGTH_SHORT).show()
+                    onCheckedChange = { enableDark ->
+                        darkModeEnabled = enableDark
+                        // Live theme switch – flows through MainActivity instantly
+                        settingsManager.setDarkMode(enableDark)
+                        Toast.makeText(
+                            context,
+                            if (enableDark) "Night palette on" else "Back to daylight",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
 
@@ -283,13 +327,25 @@ fun SettingScreen(navController: NavController) {
                 title = { Text("Theme Preference") },
                 text = {
                     Column {
-                        Row(modifier = Modifier.fillMaxWidth().clickable { showAppearanceDialog = false }.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().clickable {
+                            settingsManager.setDarkMode(systemIsDark)
+                            darkModeEnabled = systemIsDark
+                            showAppearanceDialog = false
+                        }.padding(12.dp)) {
                             Text("Follow System")
                         }
-                        Row(modifier = Modifier.fillMaxWidth().clickable { showAppearanceDialog = false }.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().clickable {
+                            settingsManager.setDarkMode(false)
+                            darkModeEnabled = false
+                            showAppearanceDialog = false
+                        }.padding(12.dp)) {
                             Text("Light Mode")
                         }
-                        Row(modifier = Modifier.fillMaxWidth().clickable { showAppearanceDialog = false }.padding(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().clickable {
+                            settingsManager.setDarkMode(true)
+                            darkModeEnabled = true
+                            showAppearanceDialog = false
+                        }.padding(12.dp)) {
                             Text("Dark Mode")
                         }
                     }

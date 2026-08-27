@@ -54,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -69,6 +70,7 @@ import com.example.civilink.data.Report
 import com.example.civilink.data.ReportViewModel
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.CivicBlue
+import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -134,6 +136,17 @@ fun AdminDashboardScreen(
                     Toast.makeText(context, "Failed to update: $it", Toast.LENGTH_SHORT).show()
                 }
             )
+        },
+        onDeleteReport = { reportId ->
+            reportViewModel.deleteReport(
+                reportId = reportId,
+                onSuccess = {
+                    Toast.makeText(context, "Report deleted successfully", Toast.LENGTH_SHORT).show()
+                },
+                onError = {
+                    Toast.makeText(context, "Delete failed: $it", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
     )
 }
@@ -145,7 +158,8 @@ fun AdminDashboardContent(
     error: String?,
     onBackClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    onStatusChanged: (String, String) -> Unit
+    onStatusChanged: (String, String) -> Unit,
+    onDeleteReport: (String) -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -171,7 +185,7 @@ fun AdminDashboardContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
 
         // ─────────────────────────────
@@ -520,6 +534,9 @@ fun AdminDashboardContent(
                     report = report,
                     onStatusChanged = { newStatus ->
                         onStatusChanged(report.id, newStatus)
+                    },
+                    onDelete = {
+                        onDeleteReport(report.id)
                     }
                 )
 
@@ -689,11 +706,39 @@ fun AdminStat(
 @Composable
 fun AdminReportCard(
     report: Report,
-    onStatusChanged: (String) -> Unit
+    onStatusChanged: (String) -> Unit,
+    onDelete: () -> Unit
 ) {
 
     var menuExpanded by remember {
         mutableStateOf(false)
+    }
+
+    var showDeleteConfirm by remember {
+        mutableStateOf(false)
+    }
+
+    if (showDeleteConfirm) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirm = false
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            },
+            title = { Text("Delete Report?") },
+            text = { Text("This action cannot be undone. Are you sure you want to remove this report?") }
+        )
     }
 
     val statusColor = when {
@@ -798,6 +843,20 @@ fun AdminReportCard(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = CivicOrange,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
 
 
@@ -1010,7 +1069,8 @@ fun AdminDashboardScreenPreview() {
             error = null,
             onBackClick = {},
             onLogoutClick = {},
-            onStatusChanged = { _, _ -> }
+            onStatusChanged = { _, _ -> },
+            onDeleteReport = {}
         )
     }
 }

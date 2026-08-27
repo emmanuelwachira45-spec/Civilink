@@ -66,7 +66,10 @@ import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_SPLASH
 import com.example.civilink.navigation.ROUT_EDITPROFILE
 import com.example.civilink.ui.components.AppLogo
+import com.example.civilink.ui.components.AppImages
+import com.example.civilink.ui.components.PhotoImage
 import com.example.civilink.ui.theme.CivicBlue
+import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
@@ -115,7 +118,7 @@ fun ProfileScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CivicLightBlue)
+            .background(civiPageBg())
     ) {
 
         // Top Bar
@@ -171,6 +174,42 @@ fun ProfileScreen(navController: NavController) {
                     .verticalScroll(rememberScrollState())
                     .padding(18.dp)
             ) {
+
+                // Cityscape cover strip – personalises the profile
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                ) {
+                    PhotoImage(
+                        url = AppImages.PROFILE_COVER,
+                        modifier = Modifier.matchParentSize(),
+                        contentDescription = "City skyline",
+                        scrim = true
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = "Your city, your fingerprint",
+                            color = CivicWhite,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Every report you file shapes it",
+                            color = CivicWhite.copy(alpha = 0.8f),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Profile Header
                 Card(

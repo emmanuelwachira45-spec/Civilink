@@ -38,9 +38,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import com.example.civilink.ui.theme.DeepNavy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -56,6 +58,9 @@ import com.example.civilink.navigation.ROUT_HOMESCREEN
 import com.example.civilink.navigation.ROUT_LOGINSCREEN
 import com.example.civilink.navigation.ROUT_REGISTER
 import com.example.civilink.ui.components.AppLogo
+import com.example.civilink.ui.components.AppImages
+import com.example.civilink.ui.components.PhotoImage
+import com.example.civilink.ui.components.bounceClick
 import com.example.civilink.ui.theme.CivicBlue
 import com.example.civilink.ui.theme.CivicGray
 import com.example.civilink.ui.theme.CivicNavy
@@ -98,12 +103,21 @@ fun LoginScreen(navController: NavController) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
+                        DeepNavy,
                         CivicNavy,
                         CivicBlue,
                     )
                 )
             )
     ) {
+
+        // Subtle city-texture backdrop behind the sign-in form
+        PhotoImage(
+            url = AppImages.LOGIN_HERO,
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.18f)
+        )
 
         Column(
             modifier = Modifier
@@ -290,7 +304,7 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clickable {
+                            .bounceClick {
 
                                 Toast.makeText(
                                     context,
@@ -464,7 +478,7 @@ fun LoginScreen(navController: NavController) {
 
                         Text(
                             text = "Create one",
-                            modifier = Modifier.clickable {
+                            modifier = Modifier.bounceClick {
 
                                 navController.navigate(
                                     ROUT_REGISTER
