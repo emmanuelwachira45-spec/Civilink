@@ -45,6 +45,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,19 +76,28 @@ import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
+import com.example.civilink.ui.components.NairobiMap
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import java.io.File
 
 @Composable
 fun CreateReportScreen(
     navController: NavController,
-    reportViewModel: ReportViewModel = viewModel()
+    reportViewModel: ReportViewModel = viewModel(),
+    reportId: String? = null
 ) {
     val context = LocalContext.current
     val isLoading by reportViewModel.isLoading.collectAsState()
+    val reports by reportViewModel.reports.collectAsState()
+    
+    val existingReport = remember(reportId, reports) {
+        if (reportId != null) reports.find { it.id == reportId } else null
+    }
 
     CreateReportContent(
         isLoading = isLoading,
+        existingReport = existingReport,
         onBackClick = { navController.popBackStack() },
         onSubmit = { title, category, location, description, imageUri ->
             val auth = FirebaseAuth.getInstance()
@@ -98,37 +108,58 @@ fun CreateReportScreen(
                 return@CreateReportContent
             }
 
-            val submitReport = { url: String? ->
-                val report = Report(
-                    userId = currentUser.uid,
-                    title = title.trim(),
-                    category = category,
-                    location = location.trim(),
-                    description = description.trim(),
-                    timestamp = System.currentTimeMillis(),
-                    imageUrl = url
-                )
+            val submitAction = { url: String? ->
+                if (existingReport != null) {
+                    // Update existing report
+                    reportViewModel.updateReport(
+                        reportId = existingReport.id,
+                        title = title,
+                        category = category,
+                        location = location,
+                        description = description,
+                        status = existingReport.status,
+                        onSuccess = {
+                            Toast.makeText(context, "Report updated successfully", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        },
+                        onError = {
+                            Toast.makeText(context, "Update failed: $it", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                } else {
+                    // Create new report
+                    val report = Report(
+                        userId = currentUser.uid,
+                        title = title.trim(),
+                        category = category,
+                        location = location.trim(),
+                        description = description.trim(),
+                        timestamp = System.currentTimeMillis(),
+                        imageUrl = url
+                    )
 
-                reportViewModel.createReport(
-                    report = report,
-                    onSuccess = {
-                        Toast.makeText(context, "Report submitted successfully", Toast.LENGTH_SHORT).show()
-                        navController.popBackStack()
-                    },
-                    onError = {
-                        Toast.makeText(context, "Error: $it", Toast.LENGTH_LONG).show()
-                    }
-                )
+                    reportViewModel.createReport(
+                        report = report,
+                        onSuccess = {
+                            Toast.makeText(context, "Report submitted successfully", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        },
+                        onError = {
+                            Toast.makeText(context, "Error: $it", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
             }
 
-            if (imageUri != null) {
+            if (imageUri != null && imageUri.toString() != existingReport?.imageUrl) {
                 reportViewModel.uploadImage(
+                    context = context,
                     uri = imageUri,
-                    onSuccess = { url -> submitReport(url) },
+                    onSuccess = { url -> submitAction(url) },
                     onError = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
                 )
             } else {
-                submitReport(null)
+                submitAction(existingReport?.imageUrl)
             }
         }
     )
@@ -137,16 +168,30 @@ fun CreateReportScreen(
 @Composable
 fun CreateReportContent(
     isLoading: Boolean,
+    existingReport: Report? = null,
     onBackClick: () -> Unit,
     onSubmit: (String, String, String, String, Uri?) -> Unit
 ) {
     val context = LocalContext.current
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Roads") }
-    var location by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var title by remember { mutableStateOf(existingReport?.title ?: "") }
+    var category by remember { mutableStateOf(existingReport?.category ?: "Roads") }
+    var location by remember { mutableStateOf(existingReport?.location ?: "") }
+    var description by remember { mutableStateOf(existingReport?.description ?: "") }
+    var imageUri by remember { mutableStateOf<Uri?>(existingReport?.imageUrl?.let { Uri.parse(it) }) }
     var isCategoryMenuExpanded by remember { mutableStateOf(false) }
+    var showMap by remember { mutableStateOf(false) }
+    var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
+
+    // Update fields if existingReport changes (e.g. when data is loaded)
+    LaunchedEffect(existingReport) {
+        if (existingReport != null) {
+            title = existingReport.title
+            category = existingReport.category
+            location = existingReport.location
+            description = existingReport.description
+            imageUri = existingReport.imageUrl?.let { Uri.parse(it) }
+        }
+    }
 
     // Camera states
     var tempImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -210,7 +255,7 @@ fun CreateReportContent(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Report an Issue",
+                text = if (existingReport != null) "Edit Report" else "Report an Issue",
                 color = CivicWhite,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
@@ -226,7 +271,7 @@ fun CreateReportContent(
                 .padding(18.dp)
         ) {
 
-            // Friendly guidance banner – makes the form feel welcoming
+            // Friendly guidance banner
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -255,14 +300,14 @@ fun CreateReportContent(
 
                     Column {
                         Text(
-                            text = "Snap it clear",
+                            text = if (existingReport != null) "Update details" else "Snap it clear",
                             color = CivicWhite,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "A sharp photo & precise spot get issues fixed faster.",
+                            text = if (existingReport != null) "Refine your report to help authorities understand better." else "A sharp photo & precise spot get issues fixed faster.",
                             color = CivicWhite.copy(alpha = 0.75f),
                             fontSize = 11.sp
                         )
@@ -399,21 +444,61 @@ fun CreateReportContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Location
-                    OutlinedTextField(
-                        value = location,
-                        onValueChange = { 
-                            location = it
-                            locationError = if (it.length < 3 && it.isNotBlank()) "Invalid location" else null
-                        },
+                    // Location with Map Picker
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Location") },
-                        leadingIcon = { Icon(Icons.Default.LocationOn, null) },
-                        isError = locationError != null,
-                        supportingText = { locationError?.let { Text(it) } },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = outlinedTextFieldColors()
-                    )
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = location,
+                            onValueChange = { 
+                                location = it
+                                locationError = if (it.length < 3 && it.isNotBlank()) "Invalid location" else null
+                            },
+                            modifier = Modifier.weight(1f),
+                            label = { Text("Location") },
+                            leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+                            isError = locationError != null,
+                            supportingText = { locationError?.let { Text(it) } },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = outlinedTextFieldColors()
+                        )
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        IconButton(
+                            onClick = { showMap = true },
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(CivicLightBlue)
+                        ) {
+                            Icon(Icons.Default.LocationOn, contentDescription = "Pick on map", tint = CivicBlue)
+                        }
+                    }
+
+                    if (showMap) {
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = { showMap = false },
+                            title = { Text("Select Location in Nairobi") },
+                            text = {
+                                Box(modifier = Modifier.size(300.dp)) {
+                                    NairobiMap(
+                                        selectedLocation = selectedLatLng,
+                                        onLocationSelected = { latLng ->
+                                            selectedLatLng = latLng
+                                            location = "${latLng.latitude}, ${latLng.longitude}"
+                                        }
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                androidx.compose.material3.TextButton(onClick = { showMap = false }) {
+                                    Text("Confirm")
+                                }
+                            }
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -460,7 +545,11 @@ fun CreateReportContent(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Submit Report", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(
+                                text = if (existingReport != null) "Update Report" else "Submit Report",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
                         }
                     }
                 }

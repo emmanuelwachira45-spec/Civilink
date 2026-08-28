@@ -12,5 +12,7 @@ data class Report(
     val imageUrl: String? = null,
     // Set whenever the report is created, edited or has its status
     // changed – lets notifications order by "latest activity".
-    val lastUpdatedAt: Long = 0L
+    val lastUpdatedAt: Long = 0L,
+    // New fields for user verification of resolution
+    val verificationStatus: String? = null // "Verified", "Disputed", or null
 )

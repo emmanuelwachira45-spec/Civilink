@@ -16,6 +16,8 @@ firebaseDatabase = "21.0.0"
 benchmarkTraceprocessor = "1.4.1"
 firebaseStorage = "22.0.1"
 coil = "2.6.0"
+mapsCompose = "6.1.2"
+googlePlayServicesMaps = "19.0.0"
 
 [libraries]
 # ... (rest)
@@ -41,6 +43,8 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database",
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "33.9.0" }
 androidx-benchmark-traceprocessor = { group = "androidx.benchmark", name = "benchmark-traceprocessor", version.ref = "benchmarkTraceprocessor" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+google-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "googlePlayServicesMaps" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

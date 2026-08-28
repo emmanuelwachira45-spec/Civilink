@@ -67,7 +67,10 @@ import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
 import com.example.civilink.ui.theme.StatusGreen
 import com.example.civilink.ui.theme.civiPageBg
+import com.example.civilink.navigation.ROUT_EDITREPORT
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import androidx.compose.material.icons.filled.Edit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,6 +80,8 @@ fun ReportDetailScreen(navController: NavController, reportId: String) {
     val context = LocalContext.current
     var report by remember { mutableStateOf<Report?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    
+    val currentUser = try { FirebaseAuth.getInstance().currentUser } catch (_: Exception) { null }
 
     LaunchedEffect(reportId) {
         FirebaseDatabase.getInstance().getReference("reports").child(reportId).get()
@@ -119,6 +124,17 @@ fun ReportDetailScreen(navController: NavController, reportId: String) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
             )
+
+            if (report?.userId == currentUser?.uid && report?.status == "Pending") {
+                IconButton(onClick = { navController.navigate("EditReport/${reportId}") }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = CivicWhite
+                    )
+                }
+            }
+
             AppLogo(size = 32.dp)
         }
 

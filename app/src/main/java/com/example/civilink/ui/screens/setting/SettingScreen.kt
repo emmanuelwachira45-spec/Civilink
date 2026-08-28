@@ -63,6 +63,8 @@ import com.example.civilink.ui.theme.CivicLightBlue
 import com.example.civilink.ui.theme.CivicNavy
 import com.example.civilink.ui.theme.CivicText
 import com.example.civilink.ui.theme.CivicWhite
+import com.example.civilink.ui.components.NairobiMap
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun SettingScreen(navController: NavController) {
@@ -84,6 +86,7 @@ fun SettingScreen(navController: NavController) {
     var showAppearanceDialog by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showNairobiMap by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -228,6 +231,9 @@ fun SettingScreen(navController: NavController) {
                 SettingItem(Icons.Default.Palette, "Appearance", "Customization") {
                     showAppearanceDialog = true
                 }
+                SettingItem(Icons.Default.LocationOn, "View Service Areas", "Nairobi County Map") {
+                    showNairobiMap = true
+                }
             }
 
             Spacer(modifier = Modifier.height(22.dp))
@@ -351,6 +357,23 @@ fun SettingScreen(navController: NavController) {
                     }
                 },
                 confirmButton = {}
+            )
+        }
+
+        if (showNairobiMap) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showNairobiMap = false },
+                title = { Text("CiviLink Service Area") },
+                text = {
+                    Box(modifier = Modifier.size(350.dp)) {
+                        NairobiMap()
+                    }
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = { showNairobiMap = false }) {
+                        Text("Close")
+                    }
+                }
             )
         }
     }

@@ -329,16 +329,24 @@ fun EditProfileScreen(navController: NavController) {
                                         val storageRef = FirebaseStorage.getInstance().reference
                                             .child("profiles/${currentUser.uid}.jpg")
                                         
-                                        storageRef.putFile(selectedImageUri!!)
-                                            .addOnSuccessListener {
-                                                storageRef.downloadUrl.addOnSuccessListener { uri ->
-                                                    performUpdate(uri.toString())
+                                        // Compress image before upload
+                                        val compressedBytes = com.example.civilink.data.ImageUtils.compressImage(context, selectedImageUri!!)
+                                        
+                                        if (compressedBytes != null) {
+                                            storageRef.putBytes(compressedBytes)
+                                                .addOnSuccessListener {
+                                                    storageRef.downloadUrl.addOnSuccessListener { uri ->
+                                                        performUpdate(uri.toString())
+                                                    }
                                                 }
-                                            }
-                                            .addOnFailureListener {
-                                                isSaving = false
-                                                Toast.makeText(context, "Image upload failed: ${it.message}", Toast.LENGTH_SHORT).show()
-                                            }
+                                                .addOnFailureListener {
+                                                    isSaving = false
+                                                    Toast.makeText(context, "Image upload failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                        } else {
+                                            isSaving = false
+                                            Toast.makeText(context, "Failed to process image", Toast.LENGTH_SHORT).show()
+                                        }
                                     } else {
                                         performUpdate(null)
                                     }

@@ -73,4 +73,8 @@ dependencies {
 
     //Icons
     implementation("androidx.compose.material:material-icons-extended:1.7.4")
+
+    // Maps
+    implementation(libs.maps.compose)
+    implementation(libs.google.play.services.maps)
 }

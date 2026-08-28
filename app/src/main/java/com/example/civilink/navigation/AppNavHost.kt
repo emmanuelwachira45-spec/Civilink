@@ -125,5 +125,12 @@ fun AppNavHost(
         composable(ROUT_NOTIFICATIONS) {
             NotificationScreen(navController)
         }
+        composable(
+            route = ROUT_EDITREPORT,
+            arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val reportId = backStackEntry.arguments?.getString("reportId") ?: ""
+            CreateReportScreen(navController, reportId = reportId)
+        }
     }
 }

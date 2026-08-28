@@ -64,16 +64,27 @@ class ReportViewModel : ViewModel() {
     }
 
     /**
-     * Uploads an image and returns the URL.
+     * Uploads a compressed image and returns the URL.
      */
     fun uploadImage(
+        context: android.content.Context,
         uri: Uri,
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         _isLoading.value = true
+        
+        // Run compression on a background thread for UI performance
+        val compressedBytes = ImageUtils.compressImage(context, uri)
+        
+        if (compressedBytes == null) {
+            _isLoading.value = false
+            onError("Failed to process image")
+            return
+        }
+
         repository.uploadImage(
-            imageUri = uri,
+            imageBytes = compressedBytes,
             onSuccess = { url ->
                 _isLoading.value = false
                 onSuccess(url)
@@ -218,6 +229,39 @@ class ReportViewModel : ViewModel() {
                 _error.value = err
                 onError(err)
             }
+        )
+    }
+
+    /**
+     * Lets a citizen verify if a report resolution is true or not.
+     */
+    fun verifyReportResolution(
+        reportId: String,
+        isTrue: Boolean,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val status = if (isTrue) "Verified" else "Disputed"
+        repository.updateReport(
+            reportId = reportId,
+            updates = mapOf(
+                "verificationStatus" to status,
+                "lastUpdatedAt" to System.currentTimeMillis()
+            ),
+            onSuccess = {
+                _reports.value = _reports.value.map { report ->
+                    if (report.id == reportId) {
+                        report.copy(
+                            verificationStatus = status,
+                            lastUpdatedAt = System.currentTimeMillis()
+                        )
+                    } else {
+                        report
+                    }
+                }
+                onSuccess()
+            },
+            onError = onError
         )
     }
 

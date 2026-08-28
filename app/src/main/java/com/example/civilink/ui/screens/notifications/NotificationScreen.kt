@@ -1,5 +1,6 @@
 package com.example.civilink.ui.screens.notifications
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,17 +23,24 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Pending
 import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,10 +72,13 @@ import java.util.Date
 import java.util.Locale
 
 data class Notification(
+    val reportId: String = "",
     val title: String,
     val message: String,
     val time: String,
     val icon: ImageVector,
+    val status: String = "",
+    val verificationStatus: String? = null,
     val accent: Color = CivicBlue
 )
 
@@ -76,22 +87,22 @@ fun NotificationScreen(
     navController: NavController,
     reportViewModel: ReportViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val reports by reportViewModel.reports.collectAsState()
-    // Using try-catch to avoid Firebase initialization errors in Preview environments
+    
     val currentUser = try {
         FirebaseAuth.getInstance().currentUser
     } catch (_: Exception) {
         null
     }
 
-    // Every report the citizen has filed appears here – including
-    // freshly submitted (Pending) ones – ordered by latest activity.
     val notifications = reports
         .filter { it.userId == currentUser?.uid }
         .sortedByDescending { maxOf(it.lastUpdatedAt, it.timestamp) }
         .map { report ->
             val activityTime = maxOf(report.lastUpdatedAt, report.timestamp)
             Notification(
+                reportId = report.id,
                 title = when {
                     report.status.equals("Pending", ignoreCase = true) -> "Report received"
                     report.status.equals("In Progress", ignoreCase = true) -> "Crews are on it"
@@ -104,23 +115,36 @@ fun NotificationScreen(
                     report.status.equals("In Progress", ignoreCase = true) -> Icons.Default.Engineering
                     else -> Icons.Default.TaskAlt
                 },
+                status = report.status,
+                verificationStatus = report.verificationStatus,
                 accent = statusAccent(report.status)
             )
         }
 
     NotificationScreenContent(
         notifications = notifications,
-        onBackClick = { navController.popBackStack() }
+        onBackClick = { navController.popBackStack() },
+        onVerify = { id, isTrue ->
+            reportViewModel.verifyReportResolution(
+                reportId = id,
+                isTrue = isTrue,
+                onSuccess = {
+                    val msg = if (isTrue) "Thank you for verifying!" else "Understood. We'll look into it."
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                },
+                onError = {
+                    Toast.makeText(context, "Error: $it", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     )
 }
 
-/**
- * A stateless version of the Notification Screen for better testability and Preview support.
- */
 @Composable
 fun NotificationScreenContent(
     notifications: List<Notification>,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onVerify: (String, Boolean) -> Unit = { _, _ -> }
 ) {
     Column(
         modifier = Modifier
@@ -159,10 +183,13 @@ fun NotificationScreenContent(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(18.dp)
+                    .padding(horizontal = 18.dp, vertical = 8.dp)
             ) {
                 items(notifications) { notification ->
-                    NotificationItem(notification)
+                    NotificationItem(
+                        notification = notification,
+                        onVerify = { isTrue -> onVerify(notification.reportId, isTrue) }
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
@@ -170,9 +197,6 @@ fun NotificationScreenContent(
     }
 }
 
-/**
- * Friendly illustrated empty state – no blank voids in CiviLink.
- */
 @Composable
 fun EmptyNotifications() {
     Column(
@@ -216,10 +240,6 @@ fun EmptyNotifications() {
     }
 }
 
-// ─────────────────────────────────────────────
-// Notification helpers
-// ─────────────────────────────────────────────
-
 private fun statusAccent(status: String): Color = when {
     status.equals("Pending", ignoreCase = true) -> CivicOrange
     status.equals("In Progress", ignoreCase = true) -> CivicBlue
@@ -230,7 +250,7 @@ private fun statusAccent(status: String): Color = when {
 private fun statusSentence(status: String): String = when {
     status.equals("Pending", ignoreCase = true) -> "received and awaiting review"
     status.equals("In Progress", ignoreCase = true) -> "currently being handled by field crews"
-    status.equals("Resolved", ignoreCase = true) -> "has been fully resolved. Thank you!"
+    status.equals("Resolved", ignoreCase = true) -> "has been marked as resolved. Is this correct?"
     else -> "status is being updated"
 }
 
@@ -248,51 +268,104 @@ private fun relativeTime(millis: Long): String {
 }
 
 @Composable
-fun NotificationItem(notification: Notification) {
+fun NotificationItem(
+    notification: Notification,
+    onVerify: (Boolean) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = CivicWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(notification.accent.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = notification.icon,
-                    contentDescription = null,
-                    tint = notification.accent,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(15.dp))
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(notification.accent.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = notification.icon,
+                        contentDescription = null,
+                        tint = notification.accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(15.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = notification.title,
+                        color = CivicText,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = notification.message,
+                        color = CivicGray,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                }
                 Text(
-                    text = notification.title,
-                    color = CivicText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = notification.message,
+                    text = notification.time,
                     color = CivicGray,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    fontSize = 10.sp,
+                    modifier = Modifier.align(Alignment.Top)
                 )
             }
-            Text(
-                text = notification.time,
-                color = CivicGray,
-                fontSize = 10.sp
-            )
+
+            // Reaction UI for Resolved reports
+            if (notification.status.equals("Resolved", ignoreCase = true)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                if (notification.verificationStatus == null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = { onVerify(false) },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                        ) {
+                            Icon(Icons.Default.Close, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("False", fontSize = 12.sp)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(
+                            onClick = { onVerify(true) },
+                            colors = ButtonDefaults.textButtonColors(contentColor = StatusGreen)
+                        ) {
+                            Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("True", fontSize = 12.sp)
+                        }
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        val isVerified = notification.verificationStatus == "Verified"
+                        Icon(
+                            imageVector = if (isVerified) Icons.Default.Verified else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = if (isVerified) StatusGreen else CivicOrange,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = if (isVerified) "Resolution Verified" else "Resolution Disputed",
+                            color = if (isVerified) StatusGreen else CivicOrange,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -303,16 +376,18 @@ fun NotificationScreenPreview() {
     NotificationScreenContent(
         notifications = listOf(
             Notification(
-                title = "Report Updated: In Progress",
-                message = "Your report 'Broken Pipe' status has changed to In Progress.",
+                title = "Crews are on it",
+                message = "'Broken Pipe' — currently being handled by field crews",
                 time = "2m ago",
-                icon = Icons.Default.Notifications
+                icon = Icons.Default.Engineering,
+                status = "In Progress"
             ),
             Notification(
-                title = "Report Updated: Resolved",
-                message = "Your report 'Pothole Fixed' status has changed to Resolved.",
+                title = "Issue resolved",
+                message = "'Pothole' — has been marked as resolved. Is this correct?",
                 time = "1h ago",
-                icon = Icons.Default.Info
+                icon = Icons.Default.TaskAlt,
+                status = "Resolved"
             )
         ),
         onBackClick = {}

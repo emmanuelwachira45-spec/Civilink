@@ -15,17 +15,17 @@ class ReportRepository {
     private val reportsRef: DatabaseReference = database.getReference("reports")
 
     /**
-     * Uploads an image to Firebase Storage.
+     * Uploads an image (as bytes) to Firebase Storage.
      */
     fun uploadImage(
-        imageUri: Uri,
+        imageBytes: ByteArray,
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         val fileName = "reports/${System.currentTimeMillis()}.jpg"
         val storageRef = storage.reference.child(fileName)
 
-        storageRef.putFile(imageUri)
+        storageRef.putBytes(imageBytes)
             .addOnSuccessListener {
                 storageRef.downloadUrl.addOnSuccessListener { uri ->
                     onSuccess(uri.toString())

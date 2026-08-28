@@ -82,6 +82,7 @@ import com.example.civilink.navigation.ROUT_PROFILESCREEN
 import com.example.civilink.navigation.ROUT_SETTINGSCREEN
 import com.example.civilink.navigation.ROUT_CREATEREPORT
 import com.example.civilink.navigation.ROUT_NOTIFICATIONS
+import com.example.civilink.navigation.ROUT_EDITREPORT
 import com.example.civilink.ui.components.AppLogo
 import com.example.civilink.ui.theme.civiPageBg
 import com.example.civilink.ui.theme.civiNavBar
@@ -106,6 +107,7 @@ import com.example.civilink.ui.components.bounceClick
 import com.example.civilink.ui.theme.BrightBlue
 import com.example.civilink.ui.theme.DeepNavy
 import com.example.civilink.ui.theme.StatusGreen
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.TextStyle
 
 @Composable
@@ -827,6 +829,10 @@ fun HomeScreenContent(
                     category = report.category,
                     status = report.status,
                     imageUrl = report.imageUrl,
+                    isOwner = report.userId == currentUserUid,
+                    onEditClick = {
+                        navController.navigate("EditReport/${report.id}")
+                    },
                     onClick = {
                         navController.navigate("ReportDetail/${report.id}")
                     }
@@ -1015,6 +1021,8 @@ fun RecentReportCard(
     category: String,
     status: String,
     imageUrl: String? = null,
+    isOwner: Boolean = false,
+    onEditClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
 
@@ -1089,6 +1097,21 @@ fun RecentReportCard(
                     color = CivicGray,
                     fontSize = 11.sp
                 )
+            }
+
+            if (isOwner && status.equals("Pending", ignoreCase = true)) {
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = CivicBlue,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
             }
 
             Box(
