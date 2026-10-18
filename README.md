@@ -33,7 +33,7 @@ cd Civilink
 
 ## Usage
 
-[Add usage instructions specific to your project here]
+Use Gradle to build and run the application, then explore the project’s civil infrastructure features through the Kotlin-based workflow.
 
 ## Project Structure
 
