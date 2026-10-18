@@ -37,7 +37,11 @@ Use Gradle to build and run the application, then explore the project’s civil 
 
 ## Project Structure
 
-[Describe the main directories and their purposes]
+- `app/` - Main application source code and entry points
+- `core/` - Shared business logic and reusable infrastructure components
+- `data/` - Data models, repositories, and persistence logic
+- `ui/` - User interface components and screens
+- `docs/` - Project documentation and technical references
 
 ## Contributing
 
@@ -45,7 +49,7 @@ Contributions are welcome! Please feel free to open issues and pull requests.
 
 ## License
 
-[Specify your license here or remove if not applicable]
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Contact
 
