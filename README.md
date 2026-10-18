@@ -49,4 +49,4 @@ Contributions are welcome! Please feel free to open issues and pull requests.
 
 ## Contact
 
-For more information, visit the repository (https://github.com/emmanuelwachira45-spec/Civilink)     ).
+For more information, visit the repository (https://github.com/emmanuelwachira45-spec/Civilink)
